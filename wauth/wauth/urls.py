@@ -14,4 +14,5 @@ urlpatterns = patterns('',
     url(r'^messages/', include('userena.contrib.umessages.urls')),
     url(r'^auth/', include('apicore.urls')),
     url(r'^/$', redirect_to, {'url': '/user/signin/'}),
+    url(r'^$', redirect_to, {'url': '/user/signin/'}),
 )
