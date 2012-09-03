@@ -9,13 +9,13 @@ class AuthProfile(UserenaBaseProfile):
     user = models.OneToOneField(User, unique=True, verbose_name='user', related_name='my_profile')
     
 class APIKey(models.Model):
-    auth_id = models.ForeignKey(AuthProfile)
-    api_id = models.IntegerField(primary_key=True, unique=True, help_text="The number ID of your API key")
+    auth = models.ForeignKey(AuthProfile)
+    api = models.IntegerField(primary_key=True, unique=True, help_text="The number ID of your API key")
     vcode = models.CharField(max_length=255, help_text="The verification code of your API key")
     
 class Character(models.Model):
-    auth_id = models.ForeignKey(AuthProfile)
-    api_id = models.ForeignKey(APIKey)
+    auth = models.ForeignKey(AuthProfile)
+    api = models.ForeignKey(APIKey)
     character_id = models.IntegerField(primary_key=True, unique=True)
     corp_id = models.IntegerField(blank=True, null=True)
     
