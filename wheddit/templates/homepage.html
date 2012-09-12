@@ -7,27 +7,30 @@
 {% block body_class %}home{% endblock %}
 
 {% block banner %}
-    <h1>{% trans "Welcome to Ocularis Inferno" %}</h1>
+    <h1>{% trans "Ocularis Inferno" %}</h1>
     <p>
         {% blocktrans %}
-        <b>Ocularis Inferno</b> an EvE Online alliance.  We have a focus on wormhole
-        life, but not everyone lives in the wormhole.
+        <b>Ocularis Inferno</b> is an EvE Online alliance.  We have a focus on wormhole
+        life, but not everyone lives in the wormhole.<br/>
+        <br/>
+        We welcome you to create an account and add your API key in preparation for our application process!
         {% endblocktrans %}
     </p>
     
-    <h2>About Our Auth System</h2>
-    <p>
-        {% blocktrans %}
-        Our auth system is based on Pinax (which is based on Django).
-        {% endblocktrans %}
-    </p>
-    
-    {% if user.is_authenticated %}
-        {% url what_next as what_next_url %}
-        <p class="what_next">{% blocktrans %}Do you want to <a href="{{ what_next_url }}" class="btn btn-info large">Learn More</a>?{% endblocktrans %}</p>
-    {% else %}
+    {% if not user.is_authenticated %}
         {% url account_login as login_url %}
         {% url account_signup as signup_url %}
         <p>{% blocktrans %}You can <a href="{{ login_url }}" class="btn">Log In</a> or <a href="{{ signup_url }}" class="btn primary">Sign Up</a> to use the site.{% endblocktrans %}</p>
     {% endif %}
+{% endblock %}
+
+{% block column-1 %}
+<h2>Latest News</h2>
+<p>We had to rebuild the profiles database to account for default characters, this should be the last time you need to make new accounts. (remember, beta)</p>
+<p><a class="btn btn-disabled" href="#" disabled="disabled">View details &raquo;</a></p>
+
+{% endblock %}
+{% block column-2 %}
+{% endblock %}
+{% block column-3 %}
 {% endblock %}

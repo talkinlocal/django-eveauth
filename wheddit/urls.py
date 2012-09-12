@@ -13,13 +13,14 @@ from django.contrib import admin
 admin.autodiscover()
 
 from .views import SignupView
-from eveauth.views import APIKeyCreateView, APIKeyUpdateView, APIKeyListView
+from eveauth.views import *
 
 urlpatterns = patterns("",
     url(r"^$", direct_to_template, {"template": "homepage.html"}, name="home"),
     url(r"^admin/", include(admin.site.urls)),
     url(r"^account/signup/$", SignupView.as_view(), name="account_signup"),
     url(r"^account/", include("account.urls")),
+
 #    url(r'^auth/$', include('eveauth.urls', namespace="eveauth")),
 )
 
@@ -33,6 +34,11 @@ urlpatterns += patterns('',
         bootstrap_delete(r'^auth/(?P<pk>\d+)/delete/$', 'apikey_delete', view=APIKeyDeleteView.as_view(), model=APIKey),
 )
 
+urlpatterns += patterns('',
+        url(r'^auth/characters/$', CharacterListView.as_view(), name="character_list"),
+        url(r'^auth/characters/update/$', CharacterUpdateView.as_view(), name="character_update"),
+        url(r"^auth/settings/$", AuthSettingsView.as_view(), name="auth_settings"),
+        )
 #urlpatterns += patterns("",
         #url(r"^auth/", include((bootstrap_patterns(APIKeyForm), 'eveauth', 'eveauth'))),
 #)

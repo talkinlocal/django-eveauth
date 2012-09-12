@@ -8,7 +8,11 @@
 <h1>{{ model_verbose_name_plural }}</h1>
 
 {% block button_bar %}
-<a href="{{ add_object_url }}" class="btn primary">Add {{ model_verbose_name }}</a>
+{% if is_updating %}
+<button type="button" class="btn btn-disabled" label="Update {{ model_verbose_name_plural }}" disabled="disabled">Update {{ model_verbose_name_plural }}</button>
+{% else %}
+<a href="/auth/characters/update/" class="btn btn-primary">Update {{ model_verbose_name_plural }}</a>
+{% endif %}
 {% endblock %}
 
     {% block content %}
@@ -16,14 +20,14 @@
             <thead>
                 {% block thead %}
                 <tr>
-                    <th>Character Name</th><th>Corporation Name</th><th>FIXME</th><th>Actions</th>
+                    <th>Character Name</th><th>Corporation Name</th><th>Actions</th>
                 </tr>
                 {% endblock %}
             <tbody>
-                {% for apikey in object_list %}
+                {% for character in object_list %}
                 <tr>
                     {% block each_tr %}
-                    <td>{{ apikey.api_id }}</td><td>{{ apikey.vcode }}</td><td>{{ apikey.date_added }}</td><td><a href="{{ apikey.api_id }}/update/" class="btn btn-primary">Edit</a><a href="{{ apikey.api_id }}/delete/" class="btn btn-danger">Delete</a></td>
+                    <td>{{ character.character_name}}</td><td><img src="{{ character.corp.get_logo_url }}"/>{{ character.corp.name}}</td><td><span class="btn btn-disabled">None</span></td>
                     {% endblock %}
                 </tr>
                 {% endfor %}
