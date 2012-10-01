@@ -2,11 +2,14 @@ from django.db import models
 from django.conf import settings
 from account.models import Account
 from datetime import datetime
-import eveapi, os, Image
+import eveapi, os, Image, managers
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.sites.models import Site
 from django.db.models.signals import post_save
 
+from django.utils import timezone, translation
+from django.utils.translation import gettext_lazy as _
 
 class APIKey(models.Model):
     account = models.ForeignKey(Account, related_name='apikeys')
@@ -44,6 +47,12 @@ class Corporation(models.Model):
             filename = "%i.thumb.png" % self.corp_id
         return settings.STATIC_URL + "logos/%s" % filename
 
+    def __unicode__(self):
+        return u"%s" % (self.name,)
+
+    def __str__(self):
+        return str(self.__unicode__(),)
+
 class Character(models.Model):
     account = models.ForeignKey(Account, related_name='all_characters')
     api_key = models.ForeignKey(APIKey, related_name='characters')
@@ -67,9 +76,8 @@ class Character(models.Model):
         charlist = []
         try:
             retchars = api_auth.account.Characters()
-        except e:
-            raise e
-            
+        except:
+            return []
         
         for retchar in retchars.characters:
             retchar_id = retchar.characterID
@@ -113,4 +121,11 @@ class CharacterSheet(models.Model):
     
     def __str__(self):
         return str(self.character.character_name)
+
+class DefaultCharacter(models.Model):
+    account = models.OneToOneField(Account, related_name='default_character')
+    character = models.OneToOneField(Character, primary_key=True, related_name='default_for')
+
+    class Meta:
+        unique_together = ('account', 'character')
 

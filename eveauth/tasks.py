@@ -12,5 +12,4 @@ def update_characters(user):
         for apikey in user.account.apikeys.all():
             Character.update_from_api(apikey)
 
-update_characters.rate_limit="240/h"
 update_characters.soft_time_limit="3600"

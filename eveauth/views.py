@@ -18,15 +18,18 @@ from bootstrap.views import (
                             DeleteView as BSDeleteView,
                             )
 from django.views.generic.base import RedirectView, View, TemplateResponseMixin
+from django.views.generic.edit import FormView
 
 from account.views import SettingsView
+from account.views import SignupView as DefSignupView
+from account.utils import default_redirect, user_display
 
 from django.template import RequestContext
 
 from eveauth.tasks import update_characters
 
-from models import APIKey, Character
-from forms import APIKeyForm, AuthSettingsForm
+from models import APIKey, Character, DefaultCharacter
+from forms import APIKeyForm, DefaultCharacterForm
 import os
 
 class CharacterUpdateView(TemplateResponseMixin, View):
@@ -36,8 +39,8 @@ class CharacterUpdateView(TemplateResponseMixin, View):
     def get(self, request):
         user = self.request.user
 
-        update_characters(user)
-        #update_characters.delay(user)
+        #update_characters(user)
+        update_characters.delay(user)
 
         messages.success(self.request, "Backend API request submitted.  Normally this takes seconds to complete, but can take up to 2 hours under heavy load.")
 
@@ -119,16 +122,23 @@ class APIKeyCreateView(BSCreateView):
         u = self.request.user
         if u.is_authenticated():
             apikey = form.save(commit=False)
-            apikey.account = u.account
+            apikey.account = u.get_profile()
             apikey.date_added = datetime.now()
             apikey.save()
             self.object = apikey
+            try:
+                from metron import activity
+
+                activity.add(request, "mixpanel", "track", "API Added", {
+                    "user": u.username,
+                    })
+            except:
+                pass
             return super(APIKeyCreateView, self).form_valid(form)
 
         raise HttpResponseForbidden
 
     def form_invalid(self, form):
-        import django.contrib.messages
         messages.error(self.request, mark_safe("Your API key is either invalid or is not made to our requirements.  Please use <a href='https://support.eveonline.com/api/key/CreatePredefined/61746010' target='_blank'>this pre-made key template</a>."))
         return self.render_to_response(self.get_context_data(form=form))
 
@@ -158,55 +168,31 @@ class APIKeyUpdateView(BSUpdateView):
         return reverse('apikey_delete', kwargs={'pk': self.object.api_id})
 
 
-class AuthSettingsView(SettingsView):
-    template_name = "eveauth/settings.html"
-    form_class = AuthSettingsForm
-    messages = {
-            "settings_updated": {
-                "level": messages.SUCCESS,
-                "text": _("Auth settings updated.")
-                },
+class DefaultCharacterView(FormView):
+    form_class = DefaultCharacterForm
+    model = DefaultCharacter
+    template_name = "eveauth/default_character.html"
 
-            "no_api_keys": {
-                "level": messages.WARNING,
-                "text": _("No API Keys defined, please add an API Key.")
-                },
+    def form_valid(self, form):
+        u = self.request.user
+        if u.is_authenticated():
+            profile = u.get_profile()
+            if hasattr(profile, 'default_character'):
+                char = profile.default_character.character
+                profile.default_character.delete()
+                messages.info(self.request, 'Removed %s as default character' % (char,))
+            defaultchar = form.save(commit=False)
+            defaultchar.account = u.get_profile()
+            defaultchar.save()
+            self.object = defaultchar
+            messages.success(self.request, 'Set %s as default character.' % (defaultchar.character,))
+            return super(DefaultCharacterView, self).form_valid(form)
 
-            "no_characters": {
-                "level": messages.WARNING,
-                "text": _("No characters found. Please 'Update Characters'.")
-                },
-                
-            }
+        raise HttpReponseForbidden
+
+    def get_success_url(self):
+        return reverse("default_character")
 
     def get_form(self, form_class):
-        """
-        Returns an instance of the form with passed user information.
-        """
-        return form_class(self.request.user, **self.get_form_kwargs())
-
-    def get_initial(self):
-        if not self.request.user.get_profile().apikeys.all():
-            if self.messages.get("no_api_keys"):
-                messages.add_message(
-                        self.request,
-                        self.messages["no_api_keys"]["level"],
-                        self.messages["no_api_keys"]["text"]
-                )
-        else:
-            no_chars = False
-            for apikey in self.request.user.get_profile().apikeys.all():
-                if not apikey.characters.all():
-                    no_chars = True
-
-            if no_chars:
-                if self.messages.get("no_characters"):
-                    messages.add_message(
-                            self.request,
-                            self.messages["no_characters"]["level"],
-                            self.messages["no_characters"]["text"]
-                    )
-        initial = super(AuthSettingsView, self).get_initial()
-        if self.request.user.get_profile().default_character_id:
-            initial["default_character_id"] = self.request.user.get_profile().default_character_id
+        return form_class(user=self.request.user, **self.get_form_kwargs())
 

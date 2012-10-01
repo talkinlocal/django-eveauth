@@ -18,6 +18,7 @@ from eveauth.views import *
 urlpatterns = patterns("",
     url(r"^$", direct_to_template, {"template": "homepage.html"}, name="home"),
     url(r"^admin/", include(admin.site.urls)),
+    url(r'^reddit/', include("vreddit.urls")), 
     url(r"^account/signup/$", SignupView.as_view(), name="account_signup"),
     url(r"^account/", include("account.urls")),
 
@@ -37,8 +38,8 @@ urlpatterns += patterns('',
 urlpatterns += patterns('',
         url(r'^auth/characters/$', CharacterListView.as_view(), name="character_list"),
         url(r'^auth/characters/update/$', CharacterUpdateView.as_view(), name="character_update"),
-        url(r"^auth/settings/$", AuthSettingsView.as_view(), name="auth_settings"),
-        )
+        url(r"^auth/characters/default/$", DefaultCharacterView.as_view(), name="default_character"),
+)
 #urlpatterns += patterns("",
         #url(r"^auth/", include((bootstrap_patterns(APIKeyForm), 'eveauth', 'eveauth'))),
 #)

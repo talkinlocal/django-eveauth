@@ -1,8 +1,7 @@
 from django import forms
-from models import APIKey, Character, Account
+from models import APIKey, Character, Account, DefaultCharacter
 from account.forms import SettingsForm
 import eveapi
-
 
 class AuthSettingsForm(SettingsForm):
     class Meta:
@@ -13,11 +12,25 @@ class AuthSettingsForm(SettingsForm):
 
         self.fields['default_character_id'] = forms.ModelChoiceField(queryset=Character.objects.filter(api_key__in=user.get_profile().apikeys.all()))
 
+class DefaultCharacterForm(forms.ModelForm):
+    def __init__(self, user, *args, **kwargs):
+        super(DefaultCharacterForm, self).__init__(*args, **kwargs)
+
+        self.fields['character'].queryset = Character.objects.filter(account=user.get_profile())
+
+        profile = user.get_profile()
+        if hasattr(profile, 'default_character'):
+            if user.get_profile().default_character is not None:
+                self.initial['character'] = user.get_profile().default_character
+
+    class Meta:
+        model = DefaultCharacter
+        exclude = ('account',)
+
 class APIKeyForm(forms.ModelForm):
     class Meta:
         model = APIKey
         exclude = ('account','date_added')
-
 
     def clean(self):
         cleaned_data = super(APIKeyForm, self).clean()
