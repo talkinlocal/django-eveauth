@@ -31,6 +31,16 @@ class RedditAccount(models.Model):
     def __unicode__(self):
         return u"%s (%s)" % (self.reddit_login, self.account)
     
+    def associated_characters(self):
+        charlist = []
+        apikeys = self.account.apikeys.all()
+        for apikey in apikeys:
+            charlist += apikey.get_characters().all()
+
+        return ", ".join([char.character_name for char in charlist])
+    
+    associated_characters.short_description = "Characters"
+
     def get_confirmation(self, create=True):
         try:
             confirmation = self.reddit_confirmation.get()

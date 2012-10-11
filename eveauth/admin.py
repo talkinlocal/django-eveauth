@@ -2,7 +2,12 @@ from django.contrib import admin
 from models import APIKey, Character, CharacterSheet, Corporation
 
 class APIKeyAdmin(admin.ModelAdmin):
-    pass
+    list_display = (
+            'account',
+            'get_formatted_characters',
+            'api_id',
+            'date_added',
+            )
 
 class CharacterAdmin(admin.ModelAdmin):
     pass

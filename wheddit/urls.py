@@ -21,6 +21,10 @@ urlpatterns = patterns("",
     url(r'^reddit/', include("vreddit.urls")), 
     url(r"^account/signup/$", SignupView.as_view(), name="account_signup"),
     url(r"^account/", include("account.urls")),
+    url(r"^oauth/", include('oauth_provider.urls')),
+    url(r"^forum/", include('forum.urls')),
+    #url(r"^forum/", include('lbforum.urls')),
+    #url(r"^forum/attachments/", include('attachments.urls')),
 
 #    url(r'^auth/$', include('eveauth.urls', namespace="eveauth")),
 )

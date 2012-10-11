@@ -3,4 +3,17 @@
 {% load i18n }
 
 {% block head_title_base %}{% if SITE_NAME %}{{ SITE_NAME }} | {% endif %} Add API Key {% endblock %}
+{% block content %}
+{% block button_bar %}
+<div class="well">
+    <p>
+    <h2>API Key Requirements</h2>
+    You can get a pre-defined key that is the minimum this system will used at the button below.  As corporate-keys are implemented, more buttons will be added for specific corporation requirements.
+    </p>
+    <div class="btn-group">
+    <a href="https://support.eveonline.com/api/Key/CreatePredefined/61746010" class="btn btn-primary" target="_blank">Pre-defined Key</a>
+</div></div>
+{% endblock %}
+{{ block.super }}
+{% endblock %}
 

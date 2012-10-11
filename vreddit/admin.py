@@ -3,7 +3,12 @@ from django.contrib import admin
 from models import RedditAccount, RedditConfirmation
 
 class RedditAccountAdmin(admin.ModelAdmin):
-    pass
+    list_display = ( 
+            'reddit_login',
+            'account',
+            'verified',
+            'associated_characters',
+            )
 
 class RedditConfirmationAdmin(admin.ModelAdmin):
     pass

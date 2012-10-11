@@ -1,7 +1,6 @@
 from django.db import models
 from django.conf import settings
 from account.models import Account
-from datetime import datetime
 import eveapi, os, Image, managers
 
 from django.contrib.auth.models import User, AnonymousUser
@@ -15,7 +14,15 @@ class APIKey(models.Model):
     account = models.ForeignKey(Account, related_name='apikeys')
     api_id = models.IntegerField(primary_key=True, unique=True, help_text="The number ID of your API key")
     vcode = models.CharField(max_length=255, help_text="The verification code of your API key")
-    date_added = models.DateTimeField(default=datetime.now)
+    date_added = models.DateTimeField(default=timezone.now)
+
+    def get_characters(self):
+        if hasattr(self, 'characters'):
+            return self.characters.all()
+
+    def get_formatted_characters(self):
+        return ", ".join([char.__str__() for char in self.get_characters()])
+    get_formatted_characters.short_description = "Characters"
 
     def __unicode__(self):
         return u"%s - %s (added %s)" % ( self.api_id, self.vcode, self.date_added) 
@@ -103,7 +110,7 @@ class Character(models.Model):
                 else:
                     alliance_id = char_details.allianceID
                     cs = CharacterSheet(character=character, corp=character.corp, alliance_id = alliance_id, sec_status = char_details.securityStatus)
-                    cs.last_retrieved = datetime.now()
+                    cs.last_retrieved = timezone.now()
                     cs.save()
             charlist.append(character)
         
