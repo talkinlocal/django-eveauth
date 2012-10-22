@@ -1,26 +1,23 @@
 {% extends "site_base.html" %}
   {% block extra_style %}
     {{ block.super }}
-  <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}forum/css/style.css" media="all">
-  <!--[if LT IE 7]><link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}forum/css/ie.css" media="all"><![endif]-->
   {% endblock %}
   {% block extra_head_base %}{{ block.super }}{% endblock %}
 
 {% block body %}
-
-<div id="userbar">
-{% block userbar %}{% endblock %}
-</div>
-
-<ul class="breadcrumb">
+<div class="row">
+<ul class="breadcrumb pull-left">
 {% block breadcrumbs %}{% endblock %}
 </ul>
-
-<div id="content">
-{% block content_title %}{% endblock %}
-{% block main_content %}{% endblock %}
+    <div class="pull-right">{% block userbar %}{% endblock %}</div>
 </div>
 
+<div id="row">
+    {% block content_title %}{% endblock %}
+</div>
+<div id="row">
+    {% block main_content %}{% endblock %}
+</div>
 {% endblock %}
 
 {% block footer %}

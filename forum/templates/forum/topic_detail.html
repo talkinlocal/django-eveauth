@@ -19,53 +19,53 @@
 {% endif %}
 {% endblock %}
 
+<div class="row">
 {% block main_content %}
+
+<div class="row well"><h2><span class="title">{{ topic.title }}</span></h2>
+{% if topic.description %}<h3>{{ topic.description }}</h3>{% endif %}
+{% if not meta %}
+<div class="btn-group pull-left">
+    <a href="{{ topic.get_meta_url }}" class="btn btn-primary btn-mini">View Metaposts</a>{% if user|can_edit_topic:topic %}<a href="{% url forum_edit_topic topic.id %}" class="btn btn-warning btn-mini">Edit Topic</a><a href="{% url forum_delete_topic topic.id %}" class="btn btn-danger btn-mini">Delete Topic</a>{% endif %}
+</div>
+</div>
+<div class="row well">
+{% if user.is_authenticated %}
+<div class="btn-group pull-right">
+{% if user|can_see_post_actions:topic %}
+<a href="{% url forum_add_reply topic.id %}" class="btn btn-primary btn-mini">Add Reply</a>
+{% else %}
+<a href="" class="btn btn-primary btn-disabled btn-mini">Add Reply</a>
+{% endif %}
+<a href="{% url forum_add_topic topic.forum_id %}" class="btn btn-info btn-mini">New Topic</a>
+</div>
+{% endif %}
 {% if topic.hidden %}
-<p class="description"><img src="{{ STATIC_URL }}forum/img/icon_exclamation.gif" alt="Hidden"> This topic is hidden.</p>
+<p class="description"><i class="icon-remove-sign"></i> This topic is hidden.</p>
 {% endif %}
 {% if topic.locked %}
-<p class="description"><img src="{{ STATIC_URL }}forum/img/icon_lock.gif" alt="Locked"> This topic is locked.</p>
+<p class="description"><i class="icon-lock"></i> This topic is locked.</p>
 {% endif %}
 <div class="tools">
-{% if is_paginated %}<div class="paginator">{% paginator "Post" %}</div>{% endif %}
-{% if user.is_authenticated %}
-<div class="actions">
-  {% if user|can_see_post_actions:topic %}<a href="{{ urls.add_reply }}">Add Reply</a> |{% endif %}
-  <a href="{% url forum_add_topic topic.forum_id %}">New Topic</a>
+{% if is_paginated %}<div class="pagination">{% paginator "Post" %}</div>{% endif %}
+</div>
 </div>
 {% endif %}
-</div>
-<div class="module no-margin">
-<h2>
-  <span class="title">{{ topic.title }}{% if topic.description %}, {{ topic.description }}{% endif %}</span>
-  {% if not meta %}<span class="separator"> - </span><span class="controls"><a href="{{ topic.get_meta_url }}">View Metaposts</a>{% if user|can_edit_topic:topic %} | <a href="{% url forum_edit_topic topic.id %}">Edit Topic</a> | <a href="{% url forum_delete_topic topic.id %}">Delete Topic</a>{% endif %}</span>{% endif %}
-</h2>
 {% if post_list %}
-{% for post in post_list %}
-<div class="post {% cycle odd,even %}" id="post{{ post.id }}">
-  <div class="postbody">
-    {% if user|can_see_post_actions:topic %}
-    <ul class="post-actions">
-      <li class="quote"><a href="{% url forum_quote_post post.id %}">Reply with quote</a></li>
-      {% if user|can_edit_post:post %}
-      <li class="edit"><a href="{% url forum_edit_post post.id %}">Edit Post</a></li>
-      {% if not post|is_first_post %}<li class="delete"><a href="{% url forum_delete_post post.id %}">Delete Post</a></li>{% endif %}
-      {% endif %}
-    </ul>
-    {% endif %}
-    <div class="body">
-      <p class="author"><a href="{{ post.get_absolute_url }}">{% if post.meta %}Metapost {% endif %}#{{ post.num_in_topic }}</a> by <a href="{% url forum_user_profile post.user_id %}">{{ post.user_username }}</a>, {{ post.posted_at|post_time:user }}</p>
-      <div class="content">
-      {{ post.body_html|safe }}
-      </div>
-    </div>
-  </div>
+<div class="row">
+<table class="table table-bordered table-rounded table-striped">
+
+    <col width="140px">
+    {% for post in post_list %}
+    <tr id="post{{ post.id }}">
+        <td>
+
   <div class="profile">
     <dl>
       {% if post.user_avatar %}
       <dt class="avatar"><img src="{{ post.user_avatar }}" alt=""{{ avatar_dimensions }}></dt>
       {% endif %}
-      <dt class="user"><a href="{% url forum_user_profile post.user_id %}">{{ post.user_username }}</a></dt>
+      <dt class="user"><a href="{% url forum_user_profile post.user_id %}">{{ post.user_default_character }}</a></dt>
       {% if post.user_title %}
       <dd class="title">{{ post.user_title }}</dd>
       {% endif %}
@@ -77,42 +77,71 @@
       {% if user|is_moderator and post.user_ip %}
       <dd class="post-ip"><strong>Post IP:</strong> {{ post.user_ip }}</dd>
       {% endif %}
+            {% if user|can_see_post_actions:topic %}
+    <div class="span2 btn-group btn-mini">
+      <a href="{% url forum_quote_post post.id %}" class="btn btn-mini btn-primary">Quote</a></li>
+      {% if user|can_edit_post:post %}
+      <a href="{% url forum_edit_post post.id %}" class="btn btn-mini btn-warning">Edit</a></li>
+      {% if not post|is_first_post %}<a href="{% url forum_delete_post post.id %}" class="btn btn-mini btn-danger">Delete</a></li>{% endif %}
+      {% endif %}
+    </div>
+            {% endif %}
     </dl>
   </div>
+  </td>
+  <td>
+      <p class="author"><a href="{{ post.get_absolute_url }}">{% if post.meta %}Metapost {% endif %}#{{ post.num_in_topic }}</a> by <a href="{% url forum_user_profile post.user_id %}">{{ post.user_default_character }}</a>, {{ post.posted_at|post_time:user }}</p>
+      {{ post.body_html|safe }}
+        </td>
+
+    </tr>
+    {% endfor %}
+</table>
 </div>
-{% endfor %}
 {% else %}
+<div class="row">
 <p class="message">There are no {% if meta %}Meta{% endif %}posts yet.</p>
-{% endif %}
 </div>
-<div class="tools">
-{% if is_paginated %}<div class="paginator">{% paginator "Post" %}</div>{% endif %}
+{% endif %}
+<div class="row well">
+{% if is_paginated %}<div class="pagination">{% paginator "Post" %}</div>{% endif %}
 {% if user.is_authenticated %}
-<div id="topic-actions-bottom" class="actions">
-  {% if user|can_see_post_actions:topic %}<a href="{{ urls.add_reply }}">Add Reply</a> |{% endif %}
-  <a href="{% url forum_add_topic topic.forum_id %}">New Topic</a>
+<div class="btn-group pull-right">
+{% if user|can_see_post_actions:topic %}
+<a href="{% url forum_add_reply topic.id %}" class="btn btn-primary btn-mini">Add Reply</a>
+{% else %}
+<a href="" class="btn btn-primary btn-disabled btn-mini">Add Reply</a>
+{% endif %}
+<a href="{% url forum_add_topic topic.forum_id %}" class="btn btn-info btn-mini">New Topic</a>
 </div>
 {% endif %}
 </div>
 
 {% if user.is_authenticated and user|can_see_post_actions:topic %}
-<div id="fast-reply"{% if not show_fast_reply %} style="display: none;"{% endif %}>
-  <form name="fastReplyForm" id="fastReplyForm" action="{{ urls.add_reply }}" method="POST">
+<hr/>
+<div id="fast-reply"{% if not show_fast_reply %} style="display: none;"{% endif %} class="row">
+  <form name="fastReplyForm" id="fastReplyForm" action="{% url forum_add_reply topic.id %}" method="POST" class="form-horizontal">
   {% csrf_token %}
-    <fieldset class="module">
+  <div class="control-group">
+        <div class="controls">
       <h2>Fast Reply</h2>
-      <div class="fast-reply-field">
         <textarea name="body" rows="10"></textarea>
-      </div>
-      <div class="form-row checkbox-row">
-        <label for="id_emoticons"><input type="checkbox" name="emoticons" id="id_emoticons" checked="checked"> Enable emoticons</label> |
-        <label for="id_meta"><input type="checkbox" name="meta" id="id_meta"> Make this a Metapost</label>
-      </div>
-    </fieldset>
-    <div id="fast-reply-buttons" class="buttons">
-      <input type="submit" name="submit" value="Add Reply">
-      <input type="submit" name="preview" value="Preview Post">
     </div>
+      </div>
+  <div class="control-group">
+          <div class="controls">
+              <label for="id_emoticons" class="control-label"><input type="checkbox" name="emoticons" id="id_emoticons" checked="checked"> Enable emoticons</label>
+          </div>
+  <div class="control-group">
+          <div class="controls">
+        <label for="id_meta" class="control-label"><input type="checkbox" name="meta" id="id_meta"> Make this a Metapost</label>
+      </div>
+      </div>
+  <div class="control-group">
+    <div id="fast-reply-buttons" class="controls btn-group">
+      <input type="submit" name="submit" value="Add Reply" class="btn btn-primary btn-small">
+      <input type="submit" name="preview" value="Preview Post" class="btn btn-warning btn-small">
+  </div>
   </form>
 </div>
 {% endif %}

@@ -13,6 +13,7 @@ MAX_AVATAR_FILESIZE     = getattr(settings, 'FORUM_MAX_AVATAR_FILESIZE',     512
 ALLOWED_AVATAR_FORMATS  = getattr(settings, 'FORUM_ALLOWED_AVATAR_FORMATS',  ('GIF', 'JPEG', 'PNG'))
 MAX_AVATAR_DIMENSIONS   = getattr(settings, 'FORUM_MAX_AVATAR_DIMENSIONS',   (64, 64))
 FORCE_AVATAR_DIMENSIONS = getattr(settings, 'FORUM_FORCE_AVATAR_DIMENSIONS', True)
+USE_DEFAULT_CHAR        = getattr(settings, 'FORUM_USE_DEFAULT_CHAR', False)
 
 EMOTICONS = getattr(settings, 'FORUM_EMOTICONS', {
         ':angry:':    'angry.gif',

@@ -42,9 +42,16 @@ class CharacterUpdateView(TemplateResponseMixin, View):
         #update_characters(user)
         update_characters.delay(user)
 
-        messages.success(self.request, "Backend API request submitted.  Normally this takes seconds to complete, but can take up to 2 hours under heavy load.")
-
         allchars = []
+
+        try:
+            user.get_profile()
+        except AttributeError:
+            messages.error(self.request, mark_safe("You're not logged in, nerd."))
+            context = self.get_context_data()
+            context = dict(context.items() + {'object_list': []}.items())
+            rc = RequestContext(request, context)
+            return self.render_to_response(rc)
 
         for apikey in user.get_profile().apikeys.all():
             allchars.append([char for char in apikey.characters.all()])
@@ -53,6 +60,8 @@ class CharacterUpdateView(TemplateResponseMixin, View):
         context = dict(context.items() + {'object_list': allchars}.items())
 
         rc = RequestContext(request, context)
+        messages.success(self.request, "Backend API request submitted.  Normally this takes seconds to complete, but can take up to 2 hours under heavy load.")
+
         return self.render_to_response(rc)
 
     def get_context_data(self, **kwargs):
@@ -75,7 +84,10 @@ class OwnerListView(BSListView):
             if hasattr(queryset, '_clone'):
                 queryset = queryset._clone()
         elif self.model is not None:
-            queryset = self.model._default_manager.filter(account=self.request.user.get_profile())
+            try:
+                queryset = self.model._default_manager.filter(account=self.request.user.get_profile())
+            except AttributeError:
+                queryset = []
         else:
             raise ImproperlyConfigured("'%s' must define 'queryset' or 'mode;'"
                                         % self.__class__.__name__)
@@ -102,6 +114,7 @@ class APIKeyListView(OwnerListView):
 
 class CharacterListView(OwnerListView):
     model = Character
+    template_name = "eveauth/character_list.html"
 
     def _get_create_url(self):
         return ''
@@ -139,7 +152,14 @@ class APIKeyCreateView(BSCreateView):
         raise HttpResponseForbidden
 
     def form_invalid(self, form):
-        messages.error(self.request, mark_safe("Your API key is either invalid or is not made to our requirements.  Please use <a href='https://support.eveonline.com/api/key/CreatePredefined/61746010' target='_blank'>this pre-made key template</a>."))
+        from django.conf import settings
+
+        if settings.EVE_CORP_MIN_MASK:
+            messages.error(self.request, mark_safe("Your API key is either invalid or is not made to our requirements.  Please use at least our <a href='https://support.eveonline.com/api/key/CreatePredefined/%s' target='_blank'>minimum key</a>." % (
+                settings.EVE_CORP_MIN_MASK
+                )))
+        else:
+            messages.error(self.request, mark_safe("Your API key is either invalid or is not made to our requirements.  Please use at least our <a href='https://support.eveonline.com/api/key/CreatePredefined/128854392' target='_blank'>minimum key</a>."))
         return self.render_to_response(self.get_context_data(form=form))
 
     def get_success_url(self):
@@ -159,7 +179,7 @@ class APIKeyUpdateView(BSUpdateView):
                 self.object = apikey
                 return super(APIKeyUpdateView, self).form_valid(form)
 
-        raise HttpReponseForbidden
+        raise HttpResponseForbidden
 
     def get_success_url(self):
         return reverse('apikey_list')

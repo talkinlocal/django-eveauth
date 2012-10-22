@@ -2,6 +2,7 @@
 Models for a discussion forum.
 """
 import datetime
+import logging
 from itertools import izip
 
 from django.contrib.auth.models import User
@@ -13,6 +14,8 @@ from forum import app_settings
 from forum.formatters import post_formatter
 from forum.utils import models as model_utils
 from pytz import common_timezones
+
+from django.conf import settings
 
 if app_settings.USE_REDIS:
     from forum import redis_connection as redis
@@ -319,7 +322,10 @@ class Forum(models.Model):
             self.last_topic_id = post.topic.pk
             self.last_topic_title = post.topic.title
             self.last_user_id = post.user.pk
-            self.last_username = post.user.username
+            if 'eveauth' in settings.INSTALLED_APPS:
+                self.last_username = post.user.get_profile().default_character.character.character_name
+            else:
+                self.last_username = post.user.username
         except IndexError:
             # No Post was given and there was no latest, non-hidden
             # Post, so there must not be any eligible Topics in the
@@ -338,7 +344,7 @@ class TopicManager(models.Manager):
         opts = self.model._meta
         user_opts = User._meta
         user_table = qn(user_opts.db_table)
-        return queryset.extra(
+        queryset = queryset.extra(
             select={
                 'user_username': '%s.%s' % (user_table, qn(user_opts.get_field('username').column)),
             },
@@ -352,6 +358,47 @@ class TopicManager(models.Manager):
                 ),
             ]
         )
+        
+        return queryset
+
+    def _character_details(self, queryset):
+        from eveauth.models import DefaultCharacter, Character
+        from account.models import Account
+        opts = self.model._meta
+        char_opts = Character._meta
+        char_table = qn(char_opts.db_table)
+        def_char_opts = DefaultCharacter._meta
+        def_char_table = qn(def_char_opts.db_table)
+        account_opts = Account._meta
+        account_table = qn(account_opts.db_table)
+
+        queryset = queryset.extra(
+                select={
+                    'user_default_character': '%s.%s' % (char_table, qn(char_opts.get_field('character_name').column)),
+                },
+                tables=[account_table, def_char_table, char_table],
+                where=[
+                    '%s.%s=%s.%s' % (
+                        account_table,
+                        qn(account_opts.get_field('user').column),
+                        qn(opts.db_table),
+                        qn(opts.get_field('user').column),
+                    ),
+                    '%s.%s=%s.%s' % (
+                        def_char_table,
+                        qn(def_char_opts.get_field('account').column),
+                        account_table,
+                        qn(account_opts.pk.column),
+                    ),
+                    '%s.%s=%s.%s' %(
+                        char_table,
+                        qn(char_opts.pk.column),
+                        def_char_table,
+                        qn(def_char_opts.pk.column),
+                    ),
+                    ]
+                )
+        return queryset
 
     def _forum_details(self, queryset):
         """
@@ -382,6 +429,13 @@ class TopicManager(models.Manager):
         """
         return self._user_details(super(TopicManager, self).get_query_set())
 
+    def with_character_details(self):
+        """
+        Creates a ``QuerySet`` containing Topics which have
+        addition information about the User's charcter who created them.
+        """
+        return self._character_details(self._user_details(super(TopicManager,self).get_query_set()))
+
     def with_forum_details(self):
         """
         Creates a ``QuerySet`` containing Topics which have
@@ -397,6 +451,16 @@ class TopicManager(models.Manager):
         """
         return self._forum_details(self._user_details(
                 super(TopicManager, self).get_query_set()))
+
+    def with_forum_and_character_details(self):
+        """
+        Create a ``QuerySet`` containing Topics which hage
+        addtional information about the User's character who created them
+        and the Forum they belong to.
+        """
+        return self._forum_details(self._character_details(
+                super(TopicManager, self).get_query_set()))
+
 
     def with_display_details(self):
         """
@@ -462,8 +526,7 @@ class TopicManager(models.Manager):
         to the given Topics.
         """
         if user.is_authenticated():
-            for topic, last_read in izip(topics,
-                                         redis.get_last_read_times(user, topics)):
+            for topic, last_read in izip(topics, redis.get_last_read_times(user, topics)):
                 topic.last_read = last_read
         return topics
 
@@ -471,8 +534,7 @@ class TopicManager(models.Manager):
         """
         Adds view counts to the given Topics.
         """
-        #for topic, view_count in izip(topics,
-                                      #redis.get_view_counts([t.pk for t in topics])):
+        #for topic, view_count in izip(topics, redis.get_view_counts([t.pk for t in topics])):
             #topic.view_count = view_count
         return topics
 
@@ -592,7 +654,11 @@ class Topic(models.Model):
         self.post_count = self.posts.filter(meta=False).count()
         self.last_post_at = post.posted_at
         self.last_user_id = post.user.pk
-        self.last_username = post.user.username
+        if 'eveauth' in settings.INSTALLED_APPS:
+            self.last_username = post.user.get_profile().default_character.character.character_name
+        else:
+            self.last_username = post.user.username
+
         model_utils.update(self, 'post_count', 'last_post_at', 'last_user_id',
                            'last_username')
     set_last_post.alters_data = True
@@ -635,6 +701,45 @@ class PostManager(models.Manager):
                 ),
             ]
         )
+    def with_character_details(self):
+        from eveauth.models import DefaultCharacter, Character
+        from account.models import Account
+
+        opts = self.model._meta
+        char_opts = Character._meta
+        char_table = qn(char_opts.db_table)
+        def_char_opts = DefaultCharacter._meta
+        def_char_table = qn(def_char_opts.db_table)
+        account_opts = Account._meta
+        account_table = qn(account_opts.db_table)
+
+        return self.with_user_details().extra(
+                select={
+                    'user_default_character': '%s.%s' % (char_table, qn(char_opts.get_field('character_name').column)),
+                },
+                tables=[account_table, def_char_table, char_table],
+                where=[
+                    '%s.%s=%s.%s' % (
+                        account_table,
+                        qn(account_opts.get_field('user').column),
+                        qn(opts.db_table),
+                        qn(opts.get_field('user').column),
+                    ),
+                    '%s.%s=%s.%s' % (
+                        def_char_table,
+                        qn(def_char_opts.get_field('account').column),
+                        account_table,
+                        qn(account_opts.pk.column),
+                    ),
+                    '%s.%s=%s.%s' %(
+                        char_table,
+                        qn(char_opts.pk.column),
+                        def_char_table,
+                        qn(def_char_opts.pk.column),
+                    ),
+                    ]
+                )
+        return queryset
 
     def with_standalone_details(self):
         """

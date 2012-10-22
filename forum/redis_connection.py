@@ -10,7 +10,7 @@ from django.utils.html import escape
 import redis
 from forum import app_settings
 
-r = redis.StrictRedis(app_settings.REDIS_HOST,
+r = redis.Redis(app_settings.REDIS_HOST,
                       app_settings.REDIS_PORT,
                       app_settings.REDIS_DB)
 

@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, InvalidPage
@@ -22,6 +23,9 @@ from forum.models import Forum, ForumProfile, Post, Search, Section, Topic
 
 if app_settings.USE_REDIS:
     from forum import redis_connection as redis
+
+if 'corpmgr' in settings.INSTALLED_APPS:
+    from corpmgr.decorators import character_required
 
 qn = connection.ops.quote_name
 
@@ -115,7 +119,7 @@ def render(request, template, context, *args, **kwargs):
     context['nodejs'] = app_settings.USE_NODEJS
     return render_to_response(template, context,
                               context_instance=RequestContext(request))
-
+@login_required
 def forum_index(request):
     """
     Displays a list of Sections and their Forums.
@@ -358,9 +362,14 @@ def forum_detail(request, forum_id):
         topic_filters['hidden'] = False
     # Get a page of topics
     topics_per_page = get_topics_per_page(request.user)
-    paginator = Paginator(
-        Topic.objects.with_user_details().filter(**topic_filters),
-        topics_per_page)
+    if 'eveauth' in settings.INSTALLED_APPS:
+        paginator = Paginator(
+                Topic.objects.with_character_details().filter(**topic_filters),
+                topics_per_page)
+    else:
+        paginator = Paginator(
+            Topic.objects.with_user_details().filter(**topic_filters),
+            topics_per_page)
     page = get_page_or_404(request, paginator)
     topics = list(page.object_list)
     context = {
@@ -382,9 +391,14 @@ def forum_detail(request, forum_id):
     # current user's last read details to all topics.
     if page.number == 1:
         topic_filters['pinned'] = True
-        pinned_topics = list(Topic.objects.with_user_details() \
-                                           .filter(**topic_filters) \
+        if 'eveauth' in settings.INSTALLED_APPS:
+            pinned_topics = list(Topic.objects.with_character_details() \
+                                            .filter(**topic_filters) \
                                             .order_by('-started_at'))
+        else:
+            pinned_topics = list(Topic.objects.with_user_details() \
+                                               .filter(**topic_filters) \
+                                                .order_by('-started_at'))
         context['pinned_topics'] = pinned_topics
         if app_settings.USE_REDIS:
             Topic.objects.add_last_read_times(topics + pinned_topics, request.user)
@@ -498,21 +512,37 @@ def topic_detail(request, topic_id, meta=False):
         if request.user.is_authenticated():
             redis.update_last_read_time(request.user, topic)
             redis.seen_user(request.user, 'Viewing Topic:', topic)
-    return object_list(request,
-        Post.objects.with_user_details().filter(topic=topic, meta=meta) \
-                                         .order_by('posted_at', 'num_in_topic'),
-        paginate_by=get_posts_per_page(request.user), allow_empty=True,
-        template_name='forum/topic_detail.html',
-        extra_context={
-            'topic': topic,
-            'title': topic.title,
-            'avatar_dimensions': get_avatar_dimensions(),
-            'meta': meta,
-            'urls': TopicURLs(topic, meta),
-            'show_fast_reply': request.user.is_authenticated() and \
-                ForumProfile.objects.get_for_user(request.user).auto_fast_reply \
-                or False,
-        }, template_object_name='post')
+    if 'eveauth' in settings.INSTALLED_APPS:
+        postqs = Post.objects.with_character_details().filter(topic=topic, meta=meta).order_by('posted_at', 'num_in_topic')
+        return object_list(request,
+                postqs,
+                paginate_by=get_posts_per_page(request.user), allow_empty=True,
+                template_name='forum/topic_detail.html',
+                extra_context={
+                    'topic': topic,
+                    'title': topic.title,
+                    'avatar_dimensions': get_avatar_dimensions(),
+                    'meta': meta,
+                    'url': TopicURLs(topic, meta),
+                    'show_fast_reply': request.user.is_authenticated() and ForumProfile.objects.get_for_user(request.user).auto_fast_reply or False,
+                            },
+                template_object_name='post')
+    else:
+        return object_list(request,
+            Post.objects.with_user_details().filter(topic=topic, meta=meta) \
+                                             .order_by('posted_at', 'num_in_topic'),
+            paginate_by=get_posts_per_page(request.user), allow_empty=True,
+            template_name='forum/topic_detail.html',
+            extra_context={
+                'topic': topic,
+                'title': topic.title,
+                'avatar_dimensions': get_avatar_dimensions(),
+                'meta': meta,
+                'urls': TopicURLs(topic, meta),
+                'show_fast_reply': request.user.is_authenticated() and \
+                    ForumProfile.objects.get_for_user(request.user).auto_fast_reply \
+                    or False,
+            }, template_object_name='post')
 
 @login_required
 @transaction.commit_on_success

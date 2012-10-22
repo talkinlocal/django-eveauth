@@ -43,15 +43,28 @@ class APIKeyForm(forms.ModelForm):
 
         try:
             keyinfo = eve_auth.account.APIKeyInfo()
-        except eveapi.AuthenticationError:
+        except:
             raise forms.ValidationError("Invalid API key.")
 
         access_mask = keyinfo.key.accessMask
         key_type = keyinfo.key.type
+
+        from django.conf import settings
         
-        is_mask = (access_mask & 61746010) == 61746010
+        if "corpmgr" in settings.INSTALLED_APPS:
+            from corpmgr.models import CorporationProfile
+            api_masks = []
+            if settings.EVE_CORP_MIN_MASK:
+                api_masks.append(settings.EVE_CORP_MIN_MASK)
+            corp_profiles = CorporationProfile.objects.all()
+            if corp_profiles.exists():
+                for corp in corp_profiles:
+                    api_masks.append(corp.api_mask)
+        
+            is_mask = (access_mask in api_masks) or ((access_mask & 128854392) == 128854392)
+
         is_type = key_type == u'Account'
         if not is_mask or not is_type:
-            raise forms.ValidationError("API Key Invalid - you MUST use mask 61746010 and Account key types!")
+            raise forms.ValidationError("API Key Invalid - you MUST use at least mask 128854392 and Account key types!")
 
         return cleaned_data

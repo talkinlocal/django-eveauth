@@ -1,20 +1,21 @@
 {% extends "forum/base.html" %}{% load forum_tags %}
 {% block main_content %}
 {% if user|is_admin %}
-<div class="tools">
-  <div class="actions">
-    <a href="{% url forum_add_section %}">Add Section</a>
-  </div>
+<div class="row btn-group">
+    <a href="{% url forum_add_section %}" class="btn btn-primary">Add Section</a>
+</div>
+<div class="row">
+    <br/>
 </div>
 {% endif %}
 {% for section,forum_list in section_list %}
-<div class="module">
-<h2><a href="{{ section.get_absolute_url }}">{{ section.name }}</a></h2>
-{% if forum_list %}
-<table>
-<col width="65%">
-<col width="1%">
+<div class="row">
+<table class="table table-striped table-bordered">
+    <col width="60%">
+    <col width="10%">
+    <col width="40%">
 <thead>
+    <tr><td colspan="3"><h2><a href="{{ section.get_absolute_url }}">{{ section.name }}</a></h2></tr>
   <tr>
     <th>Forum</th>
     <th>Topics</th>
@@ -22,6 +23,8 @@
   </tr>
 </thead>
 <tbody>
+
+{% if forum_list %}
 {% for forum in forum_list %}
   <tr class="forum {% cycle odd,even %}">
     <td>

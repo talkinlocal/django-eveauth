@@ -1,20 +1,18 @@
 {% extends "base_forum.html" %}
-{% block extrahead %}<script type="text/javascript" src="{{ STATIC_URL }}forum/js/jquery-1.2.1.pack.js"></script>{% endblock %}
+{% block extra_head %} {{ block.super }}<script type="text/javascript" src="{{ STATIC_URL }}forum/js/jquery-1.2.1.pack.js"></script>{% endblock %}
 
 {% block userbar %}
 {% if user.is_authenticated %}
-  <div id="authenticated">
-    Logged in as: <a class="user" href="{% url forum_user_profile user.id %}">{{ user.username }}</a> (<a href="{% url account_logout %}">Log out</a>)
-  </div>
-  <div id="user-tools">
-    <a href="{% url forum_new_posts %}">View New Posts</a> |
+  <div class="btn-group">
+    <a href="{% url forum_new_posts %}" class="btn">View New Posts</a>
     {% if nodejs %}
-    <a href="{% url forum_stalk_users %}">Stalk Users</a> |
+    <a href="{% url forum_stalk_users %}" class="btn">Stalk Users</a>
     {% endif %}
-    <a href="{% url forum_search %}">Search</a>
+    <a href="{% url forum_search %}" class="btn">Search</a>
+    {% block userbar_extra %}{% endblock %}
   </div>
 {% else %}
-  <div id="anonymous">
+  <div "btn-group">
     <a href="{% url account_login %}">Log in</a> or <a href="{% url account_signup %}">Sign up</a>
   </div>
 {% endif %}
@@ -26,3 +24,4 @@
 {% if forum %}{% ifnotequal forum.name title %} <span class="divider">/</span>><li> <a href="{{ forum.get_absolute_url }}">{{ forum.name }}</a></li>{% endifnotequal %}{% endif %}
 {% if title %} <span class="divider">/</span><li class="active">{{ title }}</li>{% endif %}
 {% endblock %}
+
