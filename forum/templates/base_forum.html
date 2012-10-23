@@ -5,19 +5,25 @@
   {% block extra_head_base %}{{ block.super }}{% endblock %}
 
 {% block body %}
-<div class="row">
-<ul class="breadcrumb pull-left">
-{% block breadcrumbs %}{% endblock %}
-</ul>
-    <div class="pull-right">{% block userbar %}{% endblock %}</div>
-</div>
-
-<div id="row">
-    {% block content_title %}{% endblock %}
-</div>
-<div id="row">
-    {% block main_content %}{% endblock %}
-</div>
+    {% block breadcrumbrow %}
+        <div class="row">
+            <ul class="breadcrumb pull-left">
+                {% block breadcrumbs %}{% endblock %}
+            </ul>
+            <div class="pull-right">{% block userbar %}{% endblock %}
+        </div>
+    </div>
+    {% endblock %}
+    {% block content_title_row %}
+        <div id="row">
+            {% block content_title %}{% endblock %}
+        </div>
+    {% endblock %}
+    {% block content_main_row %}
+        <div id="row">
+            {% block main_content %}{% endblock %}
+        </div>
+    {% endblock %}
 {% endblock %}
 
 {% block footer %}

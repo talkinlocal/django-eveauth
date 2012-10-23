@@ -44,7 +44,7 @@ class PostFormatter(object):
         Returns a raw post body which quotes the given Post.
         """
         return u'%s wrote:\n\n%s\n\n' % (
-            escape(post.user.username),
+            escape(post.user.get_profile().default_character.character.character_name),
             quote_post_re.sub('> ', wrap(normalize_newlines(post.body), 80)),
         )
 
@@ -74,7 +74,7 @@ class MarkdownFormatter(PostFormatter):
         Markdown syntax.
         """
         return u'**%s** [wrote](%s "View quoted post"):\n\n%s\n\n' % (
-            escape(post.user.username),
+            escape(post.user.get_profile().default_character.character.character_name),
             post.get_absolute_url(),
             quote_post_re.sub('> ', post.body),
         )
@@ -102,7 +102,7 @@ class BBCodeFormatter(PostFormatter):
         Returns a raw post body which quotes the given Post using BBCode
         syntax.
         """
-        return u'[quote="%s"]%s[/quote]' % (escape(post.user.username), post.body)
+        return u'[quote="%s"]%s[/quote]' % (escape(post.user.get_profile().default_character.character.character_name), post.body)
 
 def get_post_formatter():
     """

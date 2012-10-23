@@ -1,56 +1,73 @@
 {% extends "forum/base.html" %}{% load forum_tags %}
 
 {% block extrahead %}
-{{ block.super }}
-<script type="text/javascript">var createFastReplyControls = {{ user|can_see_post_actions:topic|yesno:"true,false" }};</script>
-<script type="text/javascript" src="{{ STATIC_URL }}forum/js/Topic.js"></script>
-{% if is_paginated %}<script type="text/javascript" src="{{ STATIC_URL }}forum/js/Paginator.js"></script>{% endif %}
+    {{ block.super }}
+    <script type="text/javascript">var createFastReplyControls = {{ user|can_see_post_actions:topic|yesno:"true,false" }};</script>
+    <script type="text/javascript" src="{{ STATIC_URL }}forum/js/Topic.js"></script>
+    {% if is_paginated %}
+        <script type="text/javascript" src="{{ STATIC_URL }}forum/js/Paginator.js"></script>
+    {% endif %}
 {% endblock %}
 
 {% block breadcrumbs %}
-<li><a href="{% url forum_index %}">Forums</a> <span class="divider">/</span></li>
-<li><a href="{% url forum_section_detail topic.section_id %}">{{ topic.section_name }}</a> <span class="divider">/</span></li>
-<li><a href="{% url forum_forum_detail topic.forum_id %}">{{ topic.forum_name }}</a> <span class="divider">/</span></li>
-{% if meta %}
-<li><a href="{{ topic.get_absolute_url }}">{{ title }}</a> <span class="divider">/</span></li>
-<li>Metaposts <span class="divider">/</span></li>
-{% else %}
-<li class="active">{{ title }}</li>
+    <li><a href="{% url forum_index %}">Forums</a> <span class="divider">/</span></li>
+    <li><a href="{% url forum_section_detail topic.section_id %}">{{ topic.section_name }}</a> <span class="divider">/</span></li>
+    <li><a href="{% url forum_forum_detail topic.forum_id %}">{{ topic.forum_name }}</a> <span class="divider">/</span></li>
+    {% if meta %}
+    <li><a href="{{ topic.get_absolute_url }}">{{ title }}</a> <span class="divider">/</span></li>
+    <li><a href="#" class="active">Metaposts</a> <span class="divider">/</span></li>
+    {% endif %}
+{% endblock %}
+
+{% block main_content %}
+
+<div class="row well">
+    <h2><span class="title">{{ topic.title }}</span></h2>
+    {% if topic.description %}
+        <h3>{{ topic.description }}</h3>{% endif %}
+    <div class="btn-group pull-left">
+        {% if not meta %}
+            <a href="{{ topic.get_meta_url }}" class="btn btn-primary btn-mini">View Metaposts</a>
+        {% endif %}
+        {% if user|can_edit_topic:topic %}
+            <a href="{% url forum_edit_topic topic.id %}" class="btn btn-warning btn-mini">Edit Topic</a>
+            <a href="{% url forum_delete_topic topic.id %}" class="btn btn-danger btn-mini">Delete Topic</a>
+        {% endif %}
+    </div>
+</div>
+
+
+{% block context_buttonbar %}
+{% if user.is_authenticated %}
+<div class="row well">
+    <div class="btn-group pull-right">
+        {% if user|can_see_post_actions:topic %}
+            <a href="{% url forum_add_reply topic.id %}" class="btn btn-primary btn-mini">Add Reply</a>
+        {% else %}
+            <a href="" class="btn btn-primary btn-disabled btn-mini">Add Reply</a>
+        {% endif %}
+        <a href="{% url forum_add_topic topic.forum_id %}" class="btn btn-info btn-mini">New Topic</a>
+    </div>
+</div>
 {% endif %}
 {% endblock %}
 
-<div class="row">
-{% block main_content %}
+{% block paginate_header %}
+{% if is_paginated %}
+    <div class="row well">
+        <div class="pagination">{% paginator "Post" %}</div>
+    </div>
+{% endif %}
+{% endblock %}
 
-<div class="row well"><h2><span class="title">{{ topic.title }}</span></h2>
-{% if topic.description %}<h3>{{ topic.description }}</h3>{% endif %}
-{% if not meta %}
-<div class="btn-group pull-left">
-    <a href="{{ topic.get_meta_url }}" class="btn btn-primary btn-mini">View Metaposts</a>{% if user|can_edit_topic:topic %}<a href="{% url forum_edit_topic topic.id %}" class="btn btn-warning btn-mini">Edit Topic</a><a href="{% url forum_delete_topic topic.id %}" class="btn btn-danger btn-mini">Delete Topic</a>{% endif %}
-</div>
-</div>
-<div class="row well">
-{% if user.is_authenticated %}
-<div class="btn-group pull-right">
-{% if user|can_see_post_actions:topic %}
-<a href="{% url forum_add_reply topic.id %}" class="btn btn-primary btn-mini">Add Reply</a>
-{% else %}
-<a href="" class="btn btn-primary btn-disabled btn-mini">Add Reply</a>
-{% endif %}
-<a href="{% url forum_add_topic topic.forum_id %}" class="btn btn-info btn-mini">New Topic</a>
-</div>
-{% endif %}
 {% if topic.hidden %}
-<p class="description"><i class="icon-remove-sign"></i> This topic is hidden.</p>
+    <p class="description"><i class="icon-remove-sign"></i> This topic is hidden.</p>
 {% endif %}
+
 {% if topic.locked %}
-<p class="description"><i class="icon-lock"></i> This topic is locked.</p>
+    <p class="description"><i class="icon-lock"></i> This topic is locked.</p>
 {% endif %}
-<div class="tools">
-{% if is_paginated %}<div class="pagination">{% paginator "Post" %}</div>{% endif %}
-</div>
-</div>
-{% endif %}
+
 {% if post_list %}
 <div class="row">
 <table class="table table-bordered table-rounded table-striped">
@@ -99,12 +116,18 @@
 </table>
 </div>
 {% else %}
-<div class="row">
+<div class="row well">
 <p class="message">There are no {% if meta %}Meta{% endif %}posts yet.</p>
 </div>
 {% endif %}
+{% block paginate_footer %}
+{% if is_paginated %}
 <div class="row well">
-{% if is_paginated %}<div class="pagination">{% paginator "Post" %}</div>{% endif %}
+<div class="pagination">{% paginator "Post" %}</div>
+</div>
+{% endif %}
+{% endblock %}
+<div class="row well">
 {% if user.is_authenticated %}
 <div class="btn-group pull-right">
 {% if user|can_see_post_actions:topic %}
@@ -119,13 +142,13 @@
 
 {% if user.is_authenticated and user|can_see_post_actions:topic %}
 <hr/>
-<div id="fast-reply"{% if not show_fast_reply %} style="display: none;"{% endif %} class="row">
+<div id="fast-reply"{% if not show_fast_reply %} style="display: none;"{% endif %} class="row well">
   <form name="fastReplyForm" id="fastReplyForm" action="{% url forum_add_reply topic.id %}" method="POST" class="form-horizontal">
   {% csrf_token %}
   <div class="control-group">
         <div class="controls">
       <h2>Fast Reply</h2>
-        <textarea name="body" rows="10"></textarea>
+        <textarea name="body" rows="10" class="span8 offset1"></textarea>
     </div>
       </div>
   <div class="control-group">
