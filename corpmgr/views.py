@@ -49,3 +49,16 @@ class CorpRecommendationView(BaseRecommendationView):
 class AllianceRecommendationView(BaseRecommendationView):
     template_name = "corpmgr/corp_recommendation.html"
     application_model = AllianceApplication
+
+class BaseApplicationView(TemplateResponseMixin, View):
+    pass
+
+class CorpApplicationView(BaseApplicationView):
+    model = CorporationApplication
+    template_name = "corpmgr/member_application.html"
+
+class AllianceApplicationView(BaseApplicationView):
+    model = AllianceApplication
+    template_name = "corpmgr/corp_application.html"
+
+    #def 

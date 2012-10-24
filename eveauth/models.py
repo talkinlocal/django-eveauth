@@ -136,3 +136,8 @@ class DefaultCharacter(models.Model):
     class Meta:
         unique_together = ('account', 'character')
 
+
+from account.fields import TimeZoneField
+from south.modelsinspector import add_introspection_rules
+
+add_introspection_rules([], ["^account\.fields\.TimeZoneField"],)

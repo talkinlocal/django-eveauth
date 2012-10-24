@@ -1,0 +1,12 @@
+{% extends "corpmgr_base.html" %}
+{% load staticfiles %}
+{% load url from future %}
+
+{% block content %}
+<div class="well">
+    <h2>Character Application</h2>
+    <p>
+    Currently, the following Corporations are taking applications.  If the corporation has red text under it, that means you're missing whatever it says you're missing and you should fix that.  If you don't have a <a href="{% url default_character %}">Default Character</a> set, all of them will have red text.
+    </p>
+</div>
+{% endblock %}

@@ -7,12 +7,12 @@ from django.contrib.contenttypes import generic
 import managers
 
 class CorporationProfile(models.Model):
-    corporation = models.OneToOneField(Corporation, related_name='mgmt_profile')
+    corporation = models.OneToOneField(Corporation, related_name='mgmt_profile', editable=False)
     manager = models.ForeignKey(User, related_name='corps_managed', unique=True)
     director_group = models.OneToOneField(Group, related_name='directors_of')
     api_mask = models.IntegerField()
     reddit_required = models.BooleanField(default=False)
-    created_on = models.DateTimeField(auto_now_add=True)
+    created_on = models.DateTimeField(auto_now_add=True, editable=False)
     last_modified = models.DateTimeField(auto_now=True)
 
     def has_director(self, user):
@@ -91,8 +91,11 @@ class CorporationApplication(ApplicationMixin):
 
     objects = managers.CorporationAppMgr()
 
+    class Meta:
+        unique_together = ('character', 'corporation')
+
 class AllianceApplication(ApplicationMixin):
-    corporation = models.OneToOneField(Corporation, related_name='alliance_application')
+    corporation = models.OneToOneField(Corporation, related_name='alliance_application', unique=True)
     created_by = models.ForeignKey(Account, related_name='alliance_applications')
     recommendations = generic.GenericRelation(Recommendation,
                                         content_type_field='application_type',
