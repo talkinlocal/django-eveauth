@@ -130,7 +130,7 @@ def forum_index(request):
             redis.seen_user(request.user, 'Viewing forum index')
         active_users = list(redis.get_active_users())
     return render(request, 'forum/forum_index.html', {
-        'section_list': list(Section.objects.get_forums_by_section()),
+        'section_list': list(Section.objects.get_authorized_by_section(request.user)),
         'title': 'Forum Index',
         'active_users': active_users,
     })
@@ -238,6 +238,10 @@ def section_detail(request, section_id):
     section = get_object_or_404(Section, pk=section_id)
     if app_settings.USE_REDIS and request.user.is_authenticated():
         redis.seen_user(request.user, 'Viewing:', section)
+    if section.is_managed():
+        if not section.is_corp_authed(request.user):
+            raise Http404
+
     return render(request, 'forum/section_detail.html', {
         'section': section,
         'forum_list': section.forums.all(),
@@ -360,8 +364,15 @@ def forum_detail(request, forum_id):
     if not request.user.is_authenticated() or \
        not auth.is_moderator(request.user):
         topic_filters['hidden'] = False
+
+    mgmt = forum.section.is_managed()
+    if mgmt:
+        if not forum.section.is_corp_authed(request.user):
+            raise Http404
+
     # Get a page of topics
     topics_per_page = get_topics_per_page(request.user)
+
     if 'eveauth' in settings.INSTALLED_APPS:
         paginator = Paginator(
                 Topic.objects.with_character_details().filter(**topic_filters),
@@ -443,6 +454,19 @@ def new_posts(request):
                datetime.date.today() - datetime.timedelta(days=14)}
     if not auth.is_moderator(request.user):
         filters['hidden'] = False
+
+    accessible_sections = []
+    for section in Section.objects.all():
+        if section.is_managed():
+            if section.is_corp_authed(request.user):
+                accessible_sections.append(section)
+        else:
+            accessible_sections.append(section)
+
+    accessible_forums = Forum.objects.all().filter(section__in = accessible_sections)
+
+    filters.update({'forum__in': accessible_forums})
+
     queryset = Topic.objects.with_forum_and_user_details().filter(
         **filters).order_by('-last_post_at')
     if app_settings.USE_REDIS:
@@ -512,8 +536,14 @@ def topic_detail(request, topic_id, meta=False):
         if request.user.is_authenticated():
             redis.update_last_read_time(request.user, topic)
             redis.seen_user(request.user, 'Viewing Topic:', topic)
+
+    if topic.forum.section.is_managed():
+        if not topic.forum.section.is_corp_authed(request.user):
+            raise Http404
+
     if 'eveauth' in settings.INSTALLED_APPS:
         postqs = Post.objects.with_character_details().filter(topic=topic, meta=meta).order_by('posted_at', 'num_in_topic')
+
         return object_list(request,
                 postqs,
                 paginate_by=get_posts_per_page(request.user), allow_empty=True,

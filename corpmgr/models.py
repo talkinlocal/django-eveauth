@@ -1,5 +1,5 @@
 from django.db import models
-from eveauth.models import Corporation, Character
+from eveauth.models import Corporation, Character, Alliance
 from account.models import Account
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
@@ -7,13 +7,17 @@ from django.contrib.contenttypes import generic
 import managers
 
 class CorporationProfile(models.Model):
-    corporation = models.OneToOneField(Corporation, related_name='mgmt_profile', editable=False)
+    corporation = models.OneToOneField(Corporation, related_name='mgmt_profile')
     manager = models.ForeignKey(User, related_name='corps_managed', unique=True)
     director_group = models.OneToOneField(Group, related_name='directors_of')
     api_mask = models.IntegerField()
     reddit_required = models.BooleanField(default=False)
+    alliance_profile = models.ForeignKey('AllianceProfile', related_name='member_corp_profiles', blank=False, null=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     last_modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ( 'corporation', 'alliance_profile' )
 
     def has_director(self, user):
         try:
@@ -31,6 +35,23 @@ class CorporationProfile(models.Model):
                 return True
 
         return False
+
+    def __str__(self):
+        return "<Corporation Profile: %s>" % (self.corporation.name,)
+
+    def __unicode__(self):
+        return self.corporation.name
+
+class AllianceProfile(models.Model):
+    alliance = models.OneToOneField(Alliance, related_name='mgmt_profile')
+    manager = models.ForeignKey(User, related_name='alliances_managed')
+    director_group = models.OneToOneField(Group, related_name='executive_directors_of')
+    api_mask = models.IntegerField(blank=True, null=True, default=None)
+    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+    last_modified = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "<Alliance Profile: %s>" % (self.alliance.alliance_name,)
 
 class ApplicationMixin(models.Model):
     REJECTED = -1
@@ -80,7 +101,7 @@ class Recommendation(models.Model):
 
 class CorporationApplication(ApplicationMixin):
     character = models.OneToOneField(Character, related_name='corp_app')
-    corporation = models.ForeignKey(Corporation, related_name='member_applications')
+    corporation_profile = models.ForeignKey(CorporationProfile, related_name='member_applications')
     created_by = models.ForeignKey(Account, related_name='corporation_applications')
     recommendations = generic.GenericRelation(Recommendation,
                                         content_type_field='application_type',
@@ -92,7 +113,10 @@ class CorporationApplication(ApplicationMixin):
     objects = managers.CorporationAppMgr()
 
     class Meta:
-        unique_together = ('character', 'corporation')
+        unique_together = ('character', 'corporation_profile')
+
+    def __unicode__(self):
+        return u"%s application for %s" % (self.corporation_profile, self.character)
 
 class AllianceApplication(ApplicationMixin):
     corporation = models.OneToOneField(Corporation, related_name='alliance_application', unique=True)

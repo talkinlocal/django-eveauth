@@ -29,6 +29,10 @@ from django.template import RequestContext
 from eveauth.tasks import update_characters
 
 from models import APIKey, Character, DefaultCharacter
+
+if "corpmgr" in settings.INSTALLED_APPS:
+    from corpmgr.models import CorporationProfile
+
 from forms import APIKeyForm, DefaultCharacterForm
 import os
 
@@ -89,7 +93,7 @@ class OwnerListView(BSListView):
             except AttributeError:
                 queryset = []
         else:
-            raise ImproperlyConfigured("'%s' must define 'queryset' or 'mode;'"
+            raise ImproperlyConfigured("'%s' must define 'queryset' or 'model'"
                                         % self.__class__.__name__)
         return queryset
 
@@ -165,6 +169,21 @@ class APIKeyCreateView(BSCreateView):
     def get_success_url(self):
         return reverse('apikey_list')
 
+    def get_context_data(self, **kwargs):
+        context = {}
+
+        if "corpmgr" in settings.INSTALLED_APPS:
+            context['corp_managed'] = True
+            corp_profiles = CorporationProfile.objects.all()
+            context['corporation_profiles'] = corp_profiles
+
+            if settings.EVE_CORP_MIN_MASK:
+                context['min_mask'] = settings.EVE_CORP_MIN_MASK
+
+        context.update(kwargs)
+
+        return super(APIKeyCreateView, self).get_context_data(**context)
+
 class APIKeyUpdateView(BSUpdateView):
     model = APIKey
     form_class = APIKeyForm
@@ -208,7 +227,7 @@ class DefaultCharacterView(FormView):
             messages.success(self.request, 'Set %s as default character.' % (defaultchar.character,))
             return super(DefaultCharacterView, self).form_valid(form)
 
-        raise HttpReponseForbidden
+        raise HttpResponseForbidden
 
     def get_success_url(self):
         return reverse("default_character")

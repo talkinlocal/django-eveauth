@@ -1,0 +1,3 @@
+[submodule "djangokb"]
+	path = djangokb
+	url = git@bitbucket.org:tsal/djangokb.git

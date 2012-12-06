@@ -24,11 +24,61 @@ class APIKey(models.Model):
         return ", ".join([char.__str__() for char in self.get_characters()])
     get_formatted_characters.short_description = "Characters"
 
+    def get_key_mask(self):
+        api = eveapi.EVEAPIConnection()
+        eve_auth = api.auth(keyID=self.api_id, vCode=self.vcode)
+
+        try:
+            keyinfo = eve_auth.account.APIKeyInfo()
+        except:
+            # Welp
+            pass
+
+        access_mask = keyinfo.key.accessMask
+
+        return access_mask
+
     def __unicode__(self):
         return u"%s - %s (added %s)" % ( self.api_id, self.vcode, self.date_added) 
 
     def __str__(self):
         return str(self.__unicode__())
+
+class UserJID(models.Model):
+    site_user = models.OneToOneField(User, related_name='jid', primary_key=True)
+    node = models.CharField(max_length=256, null=False, blank=False)
+    domain = models.CharField(max_length=255, null=False, blank=False)
+
+
+    class Meta:
+        unique_together = ('node', 'domain')
+
+    def asJID(self):
+        return u'%s@%s' % (self.node, self.domain)
+
+    @classmethod
+    def fromJID(cls, jid):
+        try:
+            node, domain = jid.split(u'@')
+            domain = domain.split(u'/')[0]
+            return cls.objects.get(node=node, domain=domain)
+        except cls.DoesNotExist:
+            # check if there's a matching (ish) username if configured to do so
+            if hasattr(settings, 'EVE_DEFAULT_JABBER_DOMAIN'):
+                if domain == settings.EVE_DEFAULT_JABBER_DOMAIN:
+                    # Just in case...
+                    try:
+                        user = User.objects.get(username__iexact=node)
+                    except User.DoesNotExist:
+                        # because they asked for a THIS dang it!
+                        return cls.objects.get(node=user.username.lower(), domain=domain)
+                    
+                    # Create one
+                    return cls(node=user.username.lower(), domain=domain)
+
+            else:
+                raise cls.DoesNotExist()
+
 
 class Corporation(models.Model):
     corp_id = models.IntegerField(primary_key=True, unique=True)
@@ -59,6 +109,19 @@ class Corporation(models.Model):
 
     def __str__(self):
         return str(self.__unicode__(),)
+
+    def has_member(self, user):
+        try:
+            profile = user.get_profile()
+        except:
+            return False
+
+        characters = profile.all_characters.all()
+        for character in characters:
+            if self == character.corp:
+                return True
+
+        return False
 
 class Character(models.Model):
     account = models.ForeignKey(Account, related_name='all_characters')
@@ -116,6 +179,9 @@ class Character(models.Model):
         
         return charlist
 
+    def __unicode__(self):
+        return u'%s' % (self.character_name,)
+
 class CharacterSheet(models.Model):
     character = models.OneToOneField(Character, primary_key=True, unique=True, related_name='sheet')
     corp = models.ForeignKey(Corporation)
@@ -136,6 +202,22 @@ class DefaultCharacter(models.Model):
     class Meta:
         unique_together = ('account', 'character')
 
+class Alliance(models.Model):
+    alliance_id = models.IntegerField(primary_key=True)
+    alliance_name = models.CharField(max_length=128)
+    executor = models.ForeignKey(Corporation, related_name='executor_of')
+
+    def has_member(self, user):
+        alliance_profile = self.mgmt_profile
+        corp_profiles = alliance_profile.member_corp_profiles
+        for profile in corp_profiles.all():
+            if profile.corporation.has_member(user):
+                return True
+
+        return False
+
+    def __str__(self):
+        return "<Alliance: %s>" % (self.alliance_name,)
 
 from account.fields import TimeZoneField
 from south.modelsinspector import add_introspection_rules

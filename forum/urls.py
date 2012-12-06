@@ -41,7 +41,6 @@ if app_settings.STANDALONE:
     from django.contrib import admin
     admin.autodiscover()
     urlpatterns += patterns('',
-        (r'^accounts/', include('registration.backends.default.urls')),
         (r'^admin/', include(admin.site.urls)),
     )
 

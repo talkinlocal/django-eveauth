@@ -91,7 +91,8 @@ class Command(BaseCommand):
            - `username`: the user name to verify exists
         """
         try:
-            user = User.objects.get(username=username)
+            logging.debug("Trying to find user %s" % (username,))
+            user = User.objects.get(username__iexact=username)
             logging.debug('Found user with username ' + str(username))
             self._generate_response(True)
         except User.DoesNotExist:
@@ -110,22 +111,27 @@ class Command(BaseCommand):
         """
         logging.debug('Starting auth check')
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(username__iexact=username)
             logging.debug('Found username ' + str(username))
+
             if check_password(password, user.password):
-                self._generate_response(True)
-                logging.info(username + ' has logged in')
-                profile = user.get_profile()
+                try:
+                    self._generate_response(True)
+                    logging.info(username + ' has logged in')
+                    profile = user.get_profile()
+                except Exception, ex:
+                    logging.warn("Could not generate response: %s" % (str(ex),))
                 # Tunnel specific .....
-                if not profile.logged_in:
-                    try:
-                        profile.logged_in = True
-                        profile.save()
-                    except Exception, ex:
-                        # Couldn't update the profile ...
-                        logging.warn("Could not save profile:" + str(ex))
-                    logging.debug('Updated ' + username + ' profile status')
-                # End Tunnel specific
+                if hasattr(profile, 'logged_in'):
+                    if not profile.logged_in:
+                        try:
+                            profile.logged_in = True
+                            profile.save()
+                        except Exception, ex:
+                            # Couldn't update the profile ...
+                            logging.warn("Could not save profile:" + str(ex))
+                        logging.debug('Updated ' + username + ' profile status')
+                    # End Tunnel specific
             else:
                 self._generate_response(False)
                 logging.info(username + ' failed auth')
@@ -163,19 +169,25 @@ class Command(BaseCommand):
                     self._generate_response(False)
                     continue
                 logging.debug('Checking operation ...')
-                if operation == 'auth':
-                    logging.info(
-                        'Auth request being processed for ' + input[1])
-                    self._handle_auth(input[0], input[2])
-                elif operation == 'isuser':
-                    logger.info('Asked if ' + input[0] + ' is a user')
-                    self._handle_isuser()
-                elif operation == 'setpass':
-                    logger.info('Asked if to change password for ' + input[0])
-                    # Do not support this (Tunnel specific)
-                    self._generate_repsonse(False)
-                else:
-                    logging.warn('Operation "' + operation + '" unknown!')
+                try:
+                    if operation == 'auth':
+                        logging.info(
+                            'Auth request being processed for %s@%s' % (input[0],input[1]))
+                        self._handle_auth(input[0], input[2])
+                    elif operation == 'isuser':
+                        logging.debug('Got isusers')
+                        logging.info('Asked if ' + input[0] + ' is a user')
+                        self._handle_isuser(input[0])
+                    elif operation == 'setpass':
+                        logging.info('Asked if to change password for ' + input[0])
+                        # Do not support this (Tunnel specific)
+                        self._generate_repsonse(False)
+                    else:
+                        logging.warn('Operation "' + operation + '" unknown!')
+                
+                except Exception, ex:
+                    logging.fatal('Unhandled error: ' + str(ex))
+
         except KeyboardInterrupt:
             logging.debug("Received Keyboard Interrupt")
             raise SystemExit(0)

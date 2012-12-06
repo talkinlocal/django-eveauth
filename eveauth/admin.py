@@ -1,5 +1,5 @@
 from django.contrib import admin
-from models import APIKey, Character, CharacterSheet, Corporation
+from models import APIKey, Character, CharacterSheet, Corporation, Alliance
 
 class APIKeyAdmin(admin.ModelAdmin):
     list_display = (
@@ -18,7 +18,11 @@ class CharacterSheetAdmin(admin.ModelAdmin):
 class CorporationAdmin(admin.ModelAdmin):
     pass
     
+class AllianceAdmin(admin.ModelAdmin):
+    pass
+
 admin.site.register(APIKey, APIKeyAdmin)
 admin.site.register(Character, CharacterAdmin)
 admin.site.register(CharacterSheet, CharacterSheetAdmin)
 admin.site.register(Corporation, CorporationAdmin)
+admin.site.register(Alliance, AllianceAdmin)

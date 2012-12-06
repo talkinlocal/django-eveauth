@@ -12,7 +12,7 @@ from django.views.generic.simple import direct_to_template
 from django.contrib import admin
 admin.autodiscover()
 
-from .views import SignupView
+from account.views import SignupView
 from eveauth.views import *
 
 urlpatterns = patterns("",
@@ -23,10 +23,7 @@ urlpatterns = patterns("",
     url(r"^account/", include("account.urls")),
     url(r"^oauth/", include('oauth_provider.urls')),
     url(r"^forum/", include('forum.urls')),
-    #url(r"^forum/", include('lbforum.urls')),
-    #url(r"^forum/attachments/", include('attachments.urls')),
-
-#    url(r'^auth/$', include('eveauth.urls', namespace="eveauth")),
+    url(r"^corps/", include('corpmgr.urls')),
 )
 
 #urlpatterns += bootstrap_patterns(APIKeyForm)

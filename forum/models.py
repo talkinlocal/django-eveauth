@@ -15,6 +15,10 @@ from forum.formatters import post_formatter
 from forum.utils import models as model_utils
 from pytz import common_timezones
 
+from corpmgr.models import CorporationProfile, AllianceProfile
+
+from eveauth.models import Character, DefaultCharacter
+
 from django.conf import settings
 
 if app_settings.USE_REDIS:
@@ -132,6 +136,9 @@ class ForumProfile(models.Model):
         """
         return self.group == self.ADMIN_GROUP
 
+    def is_in_director_group(self, profile_object):
+        pass
+
     def update_post_count(self):
         """
         Updates this ForumProfile's ``post_count`` with the number of
@@ -178,6 +185,25 @@ class SectionManager(models.Manager):
                 'change': change,
             }, [start_at])
 
+    def get_authorized_by_section(self, user):
+        """
+        Yields ordered two-tuples of (section, forums) that this user can access.
+        """
+        section_forums = {}
+        for forum in Forum.objects.all():
+            section_forums.setdefault(forum.section_id, []).append(forum)
+        for section in super(SectionManager, self).get_query_set():
+            mgmt = section.is_managed()
+            if mgmt:
+                if section.alliance_owner is not None:
+                    if section.alliance_owner.alliance.has_member(user):
+                        yield section, section_forums.get(section.pk, [])
+                elif section.corporate_owner is not None:
+                    if section.corporate_owner.corporation.has_member(user):
+                        yield section, section_forums.get(section.pk, [])
+            else:
+                yield section, section_forums.get(section.pk, [])
+
 class Section(models.Model):
     """
     Provides categorisation for forums.
@@ -185,7 +211,12 @@ class Section(models.Model):
     name  = models.CharField(max_length=100, unique=True)
     order = models.PositiveIntegerField()
 
+    if "corpmgr" in settings.INSTALLED_APPS:
+        corporate_owner = models.ForeignKey(CorporationProfile, related_name='corp_forum_sections', null=True, blank=True)
+        alliance_owner = models.ForeignKey(AllianceProfile, related_name='alliance_forum_sections', null=True, blank=True)
+
     objects = SectionManager()
+
 
     def __unicode__(self):
         return self.name
@@ -212,6 +243,29 @@ class Section(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return ('forum_section_detail', (smart_unicode(self.pk),))
+
+    def is_managed(self):
+        if "corpmgr" in settings.INSTALLED_APPS:
+            if self.alliance_owner is not None:
+                return self.alliance_owner
+            elif self.corporate_owner is not None:
+                return self.corporate_owner
+
+            return False
+        else:
+            return False
+
+    def is_corp_authed(self, user):
+        if "corpmgr" in settings.INSTALLED_APPS:
+            if self.alliance_owner is not None:
+                return self.alliance_owner.alliance.has_member(user)
+            elif self.corporate_owner is not None:
+                return self.corporate_owner.corporation.has_member(user)
+
+            return False
+
+        else:
+            return True
 
 class ForumManager(models.Manager):
     def increment_orders(self, section_id, start_at):
@@ -323,7 +377,10 @@ class Forum(models.Model):
             self.last_topic_title = post.topic.title
             self.last_user_id = post.user.pk
             if 'eveauth' in settings.INSTALLED_APPS:
-                self.last_username = post.user.get_profile().default_character.character.character_name
+                try:
+                    self.last_username = post.user.get_profile().default_character.character.character_name
+                except DefaultCharacter.DoesNotExist:
+                    self.last_username = post.user.username
             else:
                 self.last_username = post.user.username
         except IndexError:
@@ -655,7 +712,10 @@ class Topic(models.Model):
         self.last_post_at = post.posted_at
         self.last_user_id = post.user.pk
         if 'eveauth' in settings.INSTALLED_APPS:
-            self.last_username = post.user.get_profile().default_character.character.character_name
+            try:
+                self.last_username = post.user.get_profile().default_character.character.character_name
+            except:
+                self.last_username = post.user.username
         else:
             self.last_username = post.user.username
 

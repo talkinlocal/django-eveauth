@@ -61,10 +61,10 @@ class APIKeyForm(forms.ModelForm):
                 for corp in corp_profiles:
                     api_masks.append(corp.api_mask)
         
-            is_mask = (access_mask in api_masks) or ((access_mask & 128854392) == 128854392)
+            is_mask = (access_mask in api_masks) or ((access_mask & 82321730) == 82321730)
 
         is_type = key_type == u'Account'
         if not is_mask or not is_type:
-            raise forms.ValidationError("API Key Invalid - you MUST use at least mask 128854392 and Account key types!")
+            raise forms.ValidationError("API Key Invalid - you MUST use at least mask 82321730 and Account key types!")
 
         return cleaned_data

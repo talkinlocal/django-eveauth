@@ -27,7 +27,7 @@
         </li>
         <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            Auth
+            Characters
             <b class="caret"></b>
         </a>
         <ul class="dropdown-menu">
@@ -36,27 +36,15 @@
             <li><a href="{% url "default_character" %}"><i class="icon-user"></i> {% trans "Default Character" %}</a></li>
         </ul>
         </li>
+        <li><a href="{% url "corpmgr_corp_apply" %}">{% trans "Apply" %}</a></i>
         <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            <i class="icon-white icon-briefcase"></i>
-            {% trans "Forum" %}
+            {% trans "Services" %}
             <b class="caret"></b>
         </a>
         <ul class="dropdown-menu">
-            <li><a href="{% url "forum_index" %}"><i class="icon-folder-open"></i> {% trans "Index" %}</a><li>
-            <li><a href="{% url "forum_new_posts" %}"><i class="icon-folder-open"></i> {% trans "New Posts" %}</a><li>
-            <li><a href="{% url "forum_edit_user_forum_settings" %}"><i class="icon-user"></i> {% trans "Forum Profile" %}</a><li>
-        </ul>
-        </li>
-        <li class="dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            Services
-            <b class="caret"></b>
-        </a>
-        <ul class="dropdown-menu">
-            <li><a href="#"><i class="icon-lock"></i> {% trans "Internal" %}</a></li>
-            <li><a href="#"><i class="icon-lock"></i> {% trans "External" %}</a></li>
-            <li><a href="#"><i class="icon-user"></i> {% trans "Reset Services" %}</a></li>
+            <li><a href="{% url "forum_index" %}"> <i class="icon-briefcase"></i>
+            {% trans "Forum" %}</a></li>
         </ul>
         </li>
     {% else %}
