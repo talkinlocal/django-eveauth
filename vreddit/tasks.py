@@ -7,7 +7,7 @@ from models import *
 import praw
 
 class ProcessRedditQueue(PeriodicTask):
-    run_every = timedelta(minutes=3)
+    run_every = timedelta(minutes=5)
 
     def run(self, **kwargs):
         r = praw.Reddit(settings.REDDIT_USER_AGENT)
