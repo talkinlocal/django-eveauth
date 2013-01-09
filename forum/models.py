@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.db import connection, models, transaction
 from django.utils.encoding import smart_unicode
 from django.utils.text import truncate_words
+from django.utils import timezone
 
 from forum import app_settings
 from forum.formatters import post_formatter
@@ -635,7 +636,7 @@ class Topic(models.Model):
         """
         is_new = False
         if not self.pk:
-            self.started_at = datetime.datetime.now()
+            self.started_at = timezone.now()
             is_new = True
         super(Topic, self).save(*args, **kwargs)
         if is_new:
@@ -913,12 +914,12 @@ class Post(models.Model):
         self.body_html = post_formatter.format_post(self.body, self.emoticons)
         is_new = False
         if not self.pk:
-            self.posted_at = datetime.datetime.now()
+            self.posted_at = timezone.now()
             self.num_in_topic = getattr(self.topic, '%spost_count' % \
                                         (self.meta and 'meta' or '',)) + 1
             is_new = True
         else:
-            self.edited_at = datetime.datetime.now()
+            self.edited_at = timezone.now()
         super(Post, self).save(*args, **kwargs)
         if is_new:
             if not self.meta:
@@ -1000,7 +1001,7 @@ class Search(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.searched_at = datetime.datetime.now()
+            self.searched_at = timezone.now()
         super(Search, self).save(*args, **kwargs)
 
     class Meta:

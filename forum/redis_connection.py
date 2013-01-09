@@ -6,6 +6,7 @@ import time
 
 from django.core import signals
 from django.utils.html import escape
+from django.utils import timezone
 
 import redis
 from forum import app_settings
@@ -39,7 +40,7 @@ def update_last_read_time(user, topic):
     fortnight.
     """
     key = TOPIC_TRACKER % (user.pk, topic.pk)
-    last_read = datetime.datetime.now()
+    last_read = timezone.now()
     expire_at = last_read + datetime.timedelta(days=14)
     r.set(key, int(time.mktime(last_read.timetuple())))
     r.expireat(key, int(time.mktime(expire_at.timetuple())))
@@ -48,7 +49,8 @@ def get_last_read_time(user, topic_id):
     """Gets the last read time for a User in the given Topic."""
     last_read = r.get(TOPIC_TRACKER % (user.pk, topic_id))
     if last_read:
-        return datetime.datetime.fromtimestamp(int(last_read))
+        return timezone.make_aware(datetime.datetime.fromtimestamp(int(last_read)),
+                                   timezone.get_default_timezone())
     return None
 
 def get_last_read_times(user, topics):
@@ -56,7 +58,8 @@ def get_last_read_times(user, topics):
     for last_read in r.mget([TOPIC_TRACKER % (user.pk, t.pk)
                              for t in topics]):
         if last_read:
-            yield datetime.datetime.fromtimestamp(int(last_read))
+            yield timezone.make_aware(datetime.datetime.fromtimestamp(int(last_read)),
+                                      timezone.get_default_timezone())
         else:
             yield None
 
@@ -65,7 +68,7 @@ def seen_user(user, doing, item=None):
     Stores what a User was doing when they were last seen and updates
     their last seen time in the active users sorted set.
     """
-    last_seen = int(time.mktime(datetime.datetime.now().timetuple()))
+    last_seen = int(time.mktime(timezone.now().timetuple()))
     r.zadd(ACTIVE_USERS, last_seen, user.pk)
     r.setnx(USER_USERNAME % user.pk, user.username)
     r.set(USER_LAST_SEEN % user.pk, last_seen)
@@ -80,13 +83,14 @@ def get_active_users(minutes_ago=30):
     2-tuples of (user_detail_dict, last_seen_time) in most-to-least recent
     order by time.
     """
-    since = datetime.datetime.now() - datetime.timedelta(minutes=minutes_ago)
+    since = timezone.now() - datetime.timedelta(minutes=minutes_ago)
     since_time = int(time.mktime(since.timetuple()))
     for user_id, last_seen in reversed(r.zrangebyscore(ACTIVE_USERS, since_time,
                                                        'inf', withscores=True)):
         yield (
             {'id': int(user_id), 'username': r.get(USER_USERNAME % user_id)},
-            datetime.datetime.fromtimestamp(int(last_seen)),
+            timezone.make_aware(datetime.datetime.fromtimestamp(int(last_seen)),
+                                timezone.get_default_timezone()),
         )
 
 def get_last_seen(user):
@@ -96,7 +100,8 @@ def get_last_seen(user):
     """
     last_seen = r.get(USER_LAST_SEEN % user.pk)
     if last_seen:
-        last_seen = datetime.datetime.fromtimestamp(int(last_seen))
+        last_seen = timezone.make_aware(datetime.datetime.fromtimestamp(int(last_seen)),
+                                        timezone.get_default_timezone())
     else:
         last_seen = user.date_joined
     doing = r.get(USER_DOING % user.pk)
