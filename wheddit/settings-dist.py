@@ -134,6 +134,8 @@ INSTALLED_APPS = [
     # external
     "account",
     "metron",
+    "eveauth",
+    "corpmgr",
     
     # project
     "wheddit.profiles",
@@ -183,3 +185,5 @@ ACCOUNT_UNIQUE_EMAIL = EMAIL_CONFIRMATION_UNIQUE_EMAIL = False
 ACCOUNT_LOGIN_REDIRECT_URL = "home"
 ACCOUNT_LOGOUT_REDIRECT_URL = "home"
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 2
+REDDIT_LOGIN_UNIQUE = "example"
+AUTH_PROFILE_MODULE = "account.Account"
