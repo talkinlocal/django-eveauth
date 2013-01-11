@@ -125,6 +125,7 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     
     # theme
     "pinax_theme_bootstrap_account",
@@ -136,6 +137,7 @@ INSTALLED_APPS = [
     "metron",
     "eveauth",
     "corpmgr",
+    "forum",
     
     # project
     "wheddit.profiles",
