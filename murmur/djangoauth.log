@@ -1,0 +1,28 @@
+2013-01-18 15:18:05,812 INFO Starting phpBB3 mumble authenticator
+2013-01-18 15:18:05,822 DEBUG Using shared ice secret
+2013-01-18 15:18:05,822 INFO Connecting to Ice server (127.0.0.1:6502)
+2013-01-18 15:18:05,823 DEBUG Attaching callbacks
+2013-01-18 15:18:05,823 INFO Attaching meta callback
+2013-01-18 15:18:05,851 INFO Setting authenticator for virtual server 1
+2013-01-18 15:18:13,309 WARNING Caught interrupt, shutting down
+2013-01-18 15:18:13,310 INFO Shutdown complete
+2013-01-18 15:21:41,778 INFO Starting phpBB3 mumble authenticator
+2013-01-18 15:21:41,779 DEBUG Using shared ice secret
+2013-01-18 15:21:41,779 INFO Connecting to Ice server (127.0.0.1:6502)
+2013-01-18 15:21:41,780 DEBUG Attaching callbacks
+2013-01-18 15:21:41,780 INFO Attaching meta callback
+2013-01-18 15:21:41,781 INFO Setting authenticator for virtual server 1
+2013-01-18 15:21:42,423 INFO Failed authentication attempt for user: "tsal" (1000000001)
+2013-01-18 15:21:42,801 DEBUG No such user found by django.
+2013-01-18 15:21:53,058 INFO NW0RT - jolanai
+2013-01-18 15:21:53,058 INFO User authenticated: "tsal" (1000000001)
+2013-01-18 15:21:53,058 DEBUG Group memberships: []
+2013-01-18 15:21:53,085 DEBUG getInfo for 1000000001 -> denied
+2013-01-18 15:22:27,480 WARNING Caught interrupt, shutting down
+2013-01-18 15:22:27,481 INFO Shutdown complete
+2013-01-18 15:23:35,802 INFO Starting phpBB3 mumble authenticator
+2013-01-18 15:23:35,803 DEBUG Using shared ice secret
+2013-01-18 15:23:35,804 INFO Connecting to Ice server (127.0.0.1:6502)
+2013-01-18 15:23:35,804 DEBUG Attaching callbacks
+2013-01-18 15:23:35,804 INFO Attaching meta callback
+2013-01-18 15:23:35,806 INFO Setting authenticator for virtual server 1
