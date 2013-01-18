@@ -221,6 +221,7 @@ def do_main_program():
     from django.db import models
     from eveauth.models import Account
     from django.contrib.auth.models import User
+    from django.template.defaultfilters import slugify
     #
     #--- Authenticator implementation
     #    All of this has to go in here so we can correctly daemonize the tool
@@ -480,7 +481,9 @@ def do_main_program():
 
                 # TODO: Get groups
 
-                groups = []
+                groups = [slugify(group.name) for group in user.groups.all()]
+
+                groups.append(slugify(defchar.corp.ticker))
 
                 info('User authenticated: "%s" (%d)', name, user.pk + cfg.user.id_offset)
                 debug('Group memberships: %s', str(groups))
