@@ -138,9 +138,8 @@ INSTALLED_APPS = [
     "eveauth",
     "corpmgr",
     "forum",
+    "south",
     
-    # project
-    "wheddit.profiles",
 ]
 
 # A sample logging configuration. The only tangible logging

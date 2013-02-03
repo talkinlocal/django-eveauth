@@ -3,9 +3,11 @@ from django.conf import settings
 from account.models import Account
 import eveapi, os, Image, managers
 
+from django.template.defaultfilters import slugify
 from django.contrib.auth.models import User, AnonymousUser
 from django.contrib.sites.models import Site
 from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from django.utils import timezone, translation
 from django.utils.translation import gettext_lazy as _
@@ -48,7 +50,6 @@ class UserJID(models.Model):
     site_user = models.OneToOneField(User, related_name='jid', primary_key=True)
     node = models.CharField(max_length=256, null=False, blank=False)
     domain = models.CharField(max_length=255, null=False, blank=False)
-
 
     class Meta:
         unique_together = ('node', 'domain')
@@ -223,6 +224,26 @@ class Alliance(models.Model):
 
     def __str__(self):
         return "<Alliance: %s>" % (self.alliance_name,)
+
+@receiver(post_save, sender=DefaultCharacter)
+def update_jid(sender, instance, created, **kwargs):
+    domain = getattr(settings, 'EVE_DEFAULT_JABBER_DOMAIN', u'talkinlocal.org')
+    if created:
+        newjid = UserJID(instance.account.user, unicode(slugify(instance.character.character_name)), domain)
+	newjid.save()
+        return newjid
+    
+    currentjid = UserJID.objects.get(user=instance.account.user)
+
+    # Check if anything's changed.
+    if currentjid.node != unicode(slugify(instance.character.character_name)):
+        currentjid.node = unicode(slugify(instance.character.character_name))
+    # Ditto ; enforce configuration!
+    if currentjid.domain != unicode(domain):
+        currentjid.domain = unicode(domain)
+    # Just in case
+    currentjid.save()
+    return currentjid
 
 from account.fields import TimeZoneField
 from south.modelsinspector import add_introspection_rules
