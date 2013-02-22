@@ -153,7 +153,7 @@ class APIKeyCreateView(BSCreateView):
                 pass
             return super(APIKeyCreateView, self).form_valid(form)
 
-        raise HttpResponseForbidden
+        raise HttpResponseForbidden()
 
     def form_invalid(self, form):
         from django.conf import settings
@@ -227,7 +227,7 @@ class DefaultCharacterView(FormView):
             messages.success(self.request, 'Set %s as default character.' % (defaultchar.character,))
             return super(DefaultCharacterView, self).form_valid(form)
 
-        raise HttpResponseForbidden
+        raise HttpResponseForbidden()
 
     def get_success_url(self):
         return reverse("default_character")
