@@ -133,3 +133,12 @@ class CorpApplicationDeleteView(BSDeleteView):
 
     def get_success_url(self):
         return reverse('corpmgr_my_corp_app')
+
+class DirectorAppView(TemplateResponseMixin, View):
+    pass
+
+class DirectorCorpAppView(DirectorAppView):
+    pass
+
+class DirectorAllianceAppView(DirectorAppView):
+    pass

@@ -92,7 +92,7 @@ class Command(BaseCommand):
         """
         try:
             logging.debug("Trying to find user %s" % (username,))
-            user = User.objects.get(username__iexact=username)
+            user_jid = UserJID.objects.get(node__iexact=username)
             logging.debug('Found user with username ' + str(username))
             self._generate_response(True)
         except User.DoesNotExist:
@@ -111,7 +111,8 @@ class Command(BaseCommand):
         """
         logging.debug('Starting auth check')
         try:
-            user = User.objects.get(username__iexact=username)
+            user_jid = UserJID.objects.get(node__iexact=username)
+            user = user_jid.site_user
             logging.debug('Found username ' + str(username))
 
             if check_password(password, user.password):

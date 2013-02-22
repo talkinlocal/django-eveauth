@@ -9,7 +9,7 @@ Example usage
     $ virtualenv mysite
     $ source mysite/bin/activate
     (mysite)$ pip install Django==1.4.1
-    (mysite)$ git clone git@bitbucket.org:tsal/wheddit.git
+    (mysite)$ git clone git@bitbucket.org:tsal/django-eveauth.git
     (mysite)$ cd mysite
     (mysite)$ pip install -r requirements.txt
     (mysite)$ python manage.py syncdb

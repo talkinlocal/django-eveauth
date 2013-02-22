@@ -16,6 +16,8 @@ class CorporationProfile(models.Model):
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     last_modified = models.DateTimeField(auto_now=True)
 
+    groups = models.ManyToManyField(Group, related_name='corps_allowed')
+
     class Meta:
         unique_together = ( 'corporation', 'alliance_profile' )
 
@@ -49,6 +51,8 @@ class AllianceProfile(models.Model):
     api_mask = models.IntegerField(blank=True, null=True, default=None)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     last_modified = models.DateTimeField(auto_now=True)
+
+    groups = models.ManyToManyField(Group, related_name='alliances_allowed')
 
     def __str__(self):
         return "<Alliance Profile: %s>" % (self.alliance.alliance_name,)
