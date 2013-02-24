@@ -29,9 +29,6 @@ class CorpApplicationForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super(CorpApplicationForm, self).clean()
 
-        if cleaned_data.get("character") is None:
-            raise forms.ValidationError("You need to select a character / have a character.")
-
         key_mask = cleaned_data.get("character").api_key.get_key_mask()
         needed_mask = cleaned_data.get("corporation_profile").api_mask
 
