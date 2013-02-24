@@ -163,13 +163,13 @@ class DirectorDashboardView(TemplateResponseMixin, View):
         for alliance in AllianceProfile.objects.all():
             if alliance.has_director(user):
                 exec_director_of.append(alliance)
-            elif aliance.manager is user:
+            elif alliance.manager is user:
                 exec_director_of.append(alliance)
 
         pending_apps = 0
 
         for corp in director_of:
-            pending_apps += len(corp.pending_applications)
+            pending_apps += len(corp.pending_applications())
 
         cdict = {
                 "pending_applications": pending_apps,
@@ -180,10 +180,3 @@ class DirectorDashboardView(TemplateResponseMixin, View):
         rc = RequestContext(request, cdict)
 
         return self.render_to_response(rc)
-
-
-class DirectorCorpAppView(DirectorAppView):
-    pass
-
-class DirectorAllianceAppView(DirectorAppView):
-    pass

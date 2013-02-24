@@ -1,7 +1,8 @@
 from django.conf.urls.defaults import *
 from django.conf import settings
 from corpmgr.models import CorporationApplication
-from corpmgr.views import CorpApplicationView, MyCorpApplicationsView, CorpApplicationDeleteView
+from django.contrib.auth.decorators import login_required
+from corpmgr.views import CorpApplicationView, MyCorpApplicationsView, CorpApplicationDeleteView, DirectorDashboardView
 from django.views.generic.base import TemplateView
 
 from bootstrap.urls import bootstrap_delete
@@ -13,5 +14,6 @@ urlpatterns = patterns('corpmgr.views',
         #url(r'^apply/corporate/$', AllianceApplicationView.as_view(), name='corpmgr_alliance_apply'),
         #url(r'^apply/corporate/(?P<cpid>)/$', AllianceApplicationView.as_view(), name='corpmgr_alliance_apply'),
         url(r'^applications/$', MyCorpApplicationsView.as_view(), name='corpmgr_my_corp_app'),
+        url(r'^director/$', login_required(DirectorDashboardView.as_view()), name='director_dashboard'),
         bootstrap_delete('^applications/(?P<pk>\d+)/delete/$', 'corp_application_delete', view=CorpApplicationDeleteView.as_view(), model=CorporationApplication),
 )
