@@ -16,8 +16,6 @@ class CorporationProfile(models.Model):
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     last_modified = models.DateTimeField(auto_now=True)
 
-    groups = models.ManyToManyField(Group, related_name='corps_allowed')
-
     class Meta:
         unique_together = ( 'corporation', 'alliance_profile' )
 
@@ -38,6 +36,15 @@ class CorporationProfile(models.Model):
 
         return False
 
+    def pending_applications(self):
+        apps = []
+        if hasattr(self, 'member_applications'):
+            apps = CorporationApplication.objects.filter(
+                    corporation_profile = self,
+                    status__in = (0,1),
+                    )
+        return apps
+
     def __str__(self):
         return "<Corporation Profile: %s>" % (self.corporation.name,)
 
@@ -52,10 +59,15 @@ class AllianceProfile(models.Model):
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     last_modified = models.DateTimeField(auto_now=True)
 
-    groups = models.ManyToManyField(Group, related_name='alliances_allowed')
-
     def __str__(self):
         return "<Alliance Profile: %s>" % (self.alliance.alliance_name,)
+
+    def has_director(self, user):
+        try:
+            return self.director_group in user.groups.all()
+        except:
+            # Safer this way.
+            return False
 
 class ApplicationMixin(models.Model):
     REJECTED = -1
@@ -133,3 +145,4 @@ class AllianceApplication(ApplicationMixin):
     approved_by = models.ForeignKey(Account, null=True, default=None, related_name='crp_applications_approved')
     rejected_by = models.ForeignKey(Account, null=True, default=None, related_name='crp_applications_rejected')
     objects = managers.AllianceAppMgr()
+
