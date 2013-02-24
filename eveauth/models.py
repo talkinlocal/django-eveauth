@@ -26,10 +26,15 @@ class APIKey(models.Model):
         return ", ".join([char.__str__() for char in self.get_characters()])
     get_formatted_characters.short_description = "Characters"
 
-    def get_key_mask(self):
+
+    def get_api_connection(self):
         api = eveapi.EVEAPIConnection()
         eve_auth = api.auth(keyID=self.api_id, vCode=self.vcode)
+        return eve_auth
 
+
+    def get_key_mask(self):
+        eve_auth = self.get_api_connection()
         try:
             keyinfo = eve_auth.account.APIKeyInfo()
         except:
@@ -39,6 +44,10 @@ class APIKey(models.Model):
         access_mask = keyinfo.key.accessMask
 
         return access_mask
+
+    def get_key_type(self):
+        eve_auth = self.get_api_connection()
+        return eve_auth.account.APIKeyInfo().key.type
 
     def __unicode__(self):
         return u"%s - %s (added %s)" % ( self.api_id, self.vcode, self.date_added) 
