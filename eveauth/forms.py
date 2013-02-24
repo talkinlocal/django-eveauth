@@ -16,13 +16,9 @@ class DefaultCharacterForm(forms.ModelForm):
     def __init__(self, user, *args, **kwargs):
         super(DefaultCharacterForm, self).__init__(*args, **kwargs)
 
-        try:
-            profile = user.get_profile()
-        except:
-            profile = None
+        self.fields['character'].queryset = Character.objects.filter(account=user.get_profile())
 
-        self.fields['character'].queryset = Character.objects.filter(account=profile)
-
+        profile = user.get_profile()
         if hasattr(profile, 'default_character'):
             if user.get_profile().default_character is not None:
                 self.initial['character'] = user.get_profile().default_character
@@ -65,10 +61,10 @@ class APIKeyForm(forms.ModelForm):
                 for corp in corp_profiles:
                     api_masks.append(corp.api_mask)
         
-            is_mask = (access_mask in api_masks) or ((access_mask & 8388608) == 8388608)
+            is_mask = (access_mask in api_masks) or ((access_mask & 82321730) == 82321730)
 
         is_type = key_type == u'Account'
         if not is_mask or not is_type:
-            raise forms.ValidationError("API Key Invalid - you MUST use at least mask 82321730 and most importantly, <strong>Character</strong> with <strong>All characters selected</strong> for key attributes!")
+            raise forms.ValidationError("API Key Invalid - you MUST use at least mask 82321730 and Account key types!")
 
         return cleaned_data
