@@ -36,13 +36,29 @@ class CorporationProfile(models.Model):
 
         return False
 
-    def pending_applications(self):
+    def get_applications(self, status=None):
         apps = []
         if hasattr(self, 'member_applications'):
-            apps = CorporationApplication.objects.filter(
-                    corporation_profile = self,
-                    status__in = (0,1),
-                    )
+            if status is not None:
+                try:
+                    apps = CorporationApplication.objects.filter(
+                            corporation_profile = self, 
+                            status__in = status,
+                            )
+                except:
+                    apps = CorporationApplication.objects.filter(
+                            corporation_profile = self, 
+                            status = status,
+                            )
+
+            else:
+                apps = CorporationApplication.objects.filter(
+                        corporation_profile = self,
+                        )
+        return apps
+
+    def pending_applications(self, status=None):
+        apps = self.get_applications((0,1))
         return apps
 
     def __str__(self):

@@ -4,7 +4,7 @@
 
 {% block body %}
 {% block content %}
-<div class="well succes">
+<div class="well success">
     <p>
     <h2>Corporations</h2>
     {% if director_of %}
@@ -21,7 +21,7 @@
     <tbody>
     {% for corpprof in director_of %}
     <tr>
-        <td>{{ corpprof.corporation.name }}</td>
+        <td><a href="/corps/director/{{ corpprof.corporation.corp_id }}/">{{ corpprof.corporation.name }}</a></td>
         <td>{{ pending_apps }}
     </tr>    
     {% endfor %}

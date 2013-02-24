@@ -24,6 +24,7 @@ from bootstrap.views import (
 from account.utils import default_redirect, user_display
 
 from django.template import RequestContext
+from django.template.response import TemplateResponse
 
 from models import *
 from forms import *
@@ -146,6 +147,43 @@ class CorpApplicationDeleteView(BSDeleteView):
     def get_success_url(self):
         return reverse('corpmgr_my_corp_app')
 
+class DirectorCorpView(TemplateResponseMixin, View):
+    template_name = "corpmgr/director_corp_dashboard.html"
+    statuses = {'new': (0,1), 'pending': 1, 'approved': 2 }
+    
+    def get(self, request, **kwargs):
+        corp_id = kwargs.get('corpid', None)
+        user = request.user
+
+        if not user.is_authenticated():
+            return redirect("/account/login")
+
+        if corp_id is not None:
+            try:
+                corporation = Corporation.objects.get(corp_id=corp_id)
+            except Corporation.DoesNotExist:
+                return redirect("/corps/director/")
+
+            profile = corporation.mgmt_profile
+            
+            if not profile.has_director(user):
+                return redirect("/account/login/")
+
+            status_code = getattr(kwargs, 'status', None)
+
+            if status_code is None:
+                status_code = 'new'
+
+            status = self.statuses[status_code]
+
+            pending_apps = profile.pending_applications(status)
+
+            cdict = {'pending_apps': pending_apps,}
+
+            rc = RequestContext(request, cdict)
+
+            return self.render_to_response(rc)
+
 class DirectorDashboardView(TemplateResponseMixin, View):
     template_name = "corpmgr/director_dashboard.html"
 
@@ -180,3 +218,27 @@ class DirectorDashboardView(TemplateResponseMixin, View):
         rc = RequestContext(request, cdict)
 
         return self.render_to_response(rc)
+
+class DirectorAppUpdate(TemplateResponseMixin, View):
+    template_name = "corpmgr/director_corp_dashboard.html"
+
+    def get(self, request, **kwargs):
+        application = CorporationApplication.objects.get(pk=kwargs['appid'])
+        corp_profile = application.corporation_profile
+        corp_id = corp_profile.corporation.corp_id
+        character = application.character
+        status = kwargs['status']
+        user = request.user
+
+        if corp_profile.has_director(user):
+            if status is 2:
+                application.approve()
+                application.approved_by = user.get_profile()
+                application.save()
+            if status is 1:
+                application.pending()
+                application.save()
+
+            return redirect("/corps/director/%d/" % (corp_id,))
+
+        return TemplateResponse(request, self.template_name, {'corpid': corp_id, 'status': 'new'})
