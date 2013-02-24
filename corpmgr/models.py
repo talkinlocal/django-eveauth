@@ -38,6 +38,16 @@ class CorporationProfile(models.Model):
 
         return False
 
+    def pending_applications(self):
+        apps = []
+        if hasattr(self, 'member_applications'):
+            apps = CorporationApplication.objects.filter(
+                    corporation_profile = self,
+                    status__in = (0,1),
+                    )
+
+        return apps
+
     def __str__(self):
         return "<Corporation Profile: %s>" % (self.corporation.name,)
 
@@ -53,6 +63,9 @@ class AllianceProfile(models.Model):
     last_modified = models.DateTimeField(auto_now=True)
 
     groups = models.ManyToManyField(Group, related_name='alliances_allowed')
+
+    def has_director(self, user):
+        return self.director_group in user.groups.all()
 
     def __str__(self):
         return "<Alliance Profile: %s>" % (self.alliance.alliance_name,)

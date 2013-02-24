@@ -9,7 +9,8 @@ from django.utils import timezone
 
 from datetime import datetime
 
-from django.views.generic.base import RedirectView, View, TemplateResponseMixin
+from django.views.generic.base import (RedirectView,
+        View, TemplateResponseMixin)
 from django.views.generic.edit import FormView
 from eveauth.views import OwnerListView
 
@@ -42,9 +43,12 @@ class BaseRecommendationView(TemplateResponseMixin, View):
 
         corplist = set([char.corp for char in charlist])
 
-        applications = self.appliction_model.objects.filter(corporation__in=corplist).all()
+        applications = self.appliction_model.objects.filter(
+                                    corporation__in=corplist).all()
         context = self.get_context_data()
-        context = dict(content.items() + {'applications': applications}.items())
+        context = dict(content.items() + {
+                                'applications': applications,
+                            }.items())
 
         rc = RequestContext(request, context)
         return self.render_to_response(rc)
@@ -65,12 +69,11 @@ class CorpApplicationView(BaseApplicationView):
     model = CorporationApplication
     form_class = CorpApplicationForm
     template_name = "corpmgr/member_application.html"
-    
+
     def form_valid(self, form):
         u = self.request.user
         if u.is_authenticated():
             profile = u.get_profile()
-            
             corp_app = form.save(commit=False)
             corp_app.created_by = profile
             corp_app.save()
@@ -95,7 +98,11 @@ class CorpApplicationView(BaseApplicationView):
         return super(CorpApplicationView, self).get_context_data(**context)
 
     def form_invalid(self, form):
-        messages.error(self.request, "Either your API Key does not meet the corporate minimum requirements, or your CEO key does not have the necessary information.")
+        messages.error(self.request,
+"""
+Either your API Key does not meet the corporate minimum requirements,
+or your CEO key does not have the necessary information.
+""")
         return self.render_to_response(self.get_context_data(form=form))
 
 
@@ -115,12 +122,17 @@ class CreatedByView(OwnerListView):
                 queryset = queryset._clone()
         elif self.model is not None:
             try:
-                queryset = self.model._default_manager.filter(created_by=self.request.user.get_profile())
+                queryset = self.model._default_manager.filter(
+                        created_by=self.request.user.get_profile()
+                        )
             except AttributeError:
                 queryset=[]
         else:
-            raise ImproperlyConfigured("'%s' must define 'queryset' or 'model'"
-                    % self.__class__.__name__)
+            raise ImproperlyConfigured(
+                    "'%s' must define 'queryset' or 'model'" % (
+                            self.__class__.__name__,
+                        )
+                    )
 
         return queryset
 
@@ -134,8 +146,41 @@ class CorpApplicationDeleteView(BSDeleteView):
     def get_success_url(self):
         return reverse('corpmgr_my_corp_app')
 
-class DirectorAppView(TemplateResponseMixin, View):
-    pass
+class DirectorDashboardView(TemplateResponseMixin, View):
+    template_name = "corpmgr/director_dashboard.html"
+
+    def get(self, request, **kwargs):
+        user = request.user
+        director_of = []
+        exec_director_of = []
+
+        for corp in CorporationProfile.objects.all():
+            if corp.has_director(user):
+                director_of.append(corp)
+            elif corp.manager is user:
+                director_of.append(corp)
+
+        for alliance in AllianceProfile.objects.all():
+            if alliance.has_director(user):
+                exec_director_of.append(alliance)
+            elif aliance.manager is user:
+                exec_director_of.append(alliance)
+
+        pending_apps = 0
+
+        for corp in director_of:
+            pending_apps += len(corp.pending_applications)
+
+        cdict = {
+                "pending_applications": pending_apps,
+                "director_of": director_of,
+                "exec_director_of": exec_director_of,
+                }
+
+        rc = RequestContext(request, cdict)
+
+        return self.render_to_response(rc)
+
 
 class DirectorCorpAppView(DirectorAppView):
     pass

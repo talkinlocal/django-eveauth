@@ -82,7 +82,6 @@ class UserJID(models.Model):
                     except User.DoesNotExist:
                         # because they asked for a THIS dang it!
                         return cls.objects.get(node=user.username.lower(), domain=domain)
-                    
                     # Create one
                     return cls(node=user.username.lower(), domain=domain)
 

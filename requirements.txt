@@ -23,7 +23,7 @@ kombu==2.4.6
 metron==1.0
 pinax-theme-bootstrap==2.0.4
 pinax-theme-bootstrap-account==1.0b2
-pinax-utils==1.0b1.dev3
+pinax-utils>=1.0b1.dev3
 praw==1.0.7
 psycopg2==2.4.5
 pybb==0.1.10
