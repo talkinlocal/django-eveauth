@@ -55,18 +55,19 @@ class CharacterUpdateView(TemplateResponseMixin, View):
             context = self.get_context_data()
             context = dict(context.items() + {'object_list': []}.items())
             rc = RequestContext(request, context)
-            return self.render_to_response(rc)
+            return redirect("/account/login/")
 
-        for apikey in user.get_profile().apikeys.all():
-            allchars.append([char for char in apikey.characters.all()])
+        # for apikey in user.get_profile().apikeys.all():
+            # allchars.append([char for char in apikey.characters.all()])
 
         context = self.get_context_data()
-        context = dict(context.items() + {'object_list': allchars}.items())
+        #context = dict(context.items() + {'object_list': allchars}.items())
 
         rc = RequestContext(request, context)
         messages.success(self.request, "Backend API request submitted.  Normally this takes seconds to complete, but can take up to 2 hours under heavy load.")
 
-        return self.render_to_response(rc)
+        return redirect("/auth/characters/")
+        #return self.render_to_response(rc)
 
     def get_context_data(self, **kwargs):
         model_meta = self.model._meta
@@ -125,6 +126,7 @@ class CharacterListView(OwnerListView):
 
 class APIKeyDeleteView(BSDeleteView):
     model = APIKey
+    template_name = "eveauth/apikey_delete.html"
 
     def get_success_url(self):
         return reverse('apikey_list')
@@ -153,7 +155,7 @@ class APIKeyCreateView(BSCreateView):
                 pass
             return super(APIKeyCreateView, self).form_valid(form)
 
-        raise HttpResponseForbidden()
+        raise HttpResponseForbidden
 
     def form_invalid(self, form):
         from django.conf import settings
@@ -227,7 +229,7 @@ class DefaultCharacterView(FormView):
             messages.success(self.request, 'Set %s as default character.' % (defaultchar.character,))
             return super(DefaultCharacterView, self).form_valid(form)
 
-        raise HttpResponseForbidden()
+        raise HttpResponseForbidden
 
     def get_success_url(self):
         return reverse("default_character")
