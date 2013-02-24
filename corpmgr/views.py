@@ -134,11 +134,37 @@ class CorpApplicationDeleteView(BSDeleteView):
     def get_success_url(self):
         return reverse('corpmgr_my_corp_app')
 
-class DirectorAppView(TemplateResponseMixin, View):
-    pass
+class DirectorDashboardView(TemplateResponseMixin, View):
+    template_name = "corpmgr/director_dashboard.html"
 
-class DirectorCorpAppView(DirectorAppView):
-    pass
+    def get(self, request, **kwargs):
+        user = request.user
+        director_of = []
+        exec_director_of = []
 
-class DirectorAllianceAppView(DirectorAppView):
-    pass
+        for corp in CorporationProfile.objects.all():
+            if corp.has_director(user):
+                director_of.append(corp)
+            elif corp.manager is user:
+                director_of.append(corp)
+
+        for alliance in AllianceProfile.objects.all():
+            if alliance.has_director(user):
+                exec_director_of.append(alliance)
+            elif alliance.manager is user:
+                exec_director_of.append(alliance)
+
+        pending_apps = 0
+
+        for corp in director_of:
+            pending_apps += len(corp.pending_applications())
+
+        cdict = {
+                "pending_applications": pending_apps,
+                "director_of": director_of,
+                "exec_director_of": exec_director_of,
+                }
+
+        rc = RequestContext(request, cdict)
+
+        return self.render_to_response(rc)
