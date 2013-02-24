@@ -16,9 +16,13 @@ class DefaultCharacterForm(forms.ModelForm):
     def __init__(self, user, *args, **kwargs):
         super(DefaultCharacterForm, self).__init__(*args, **kwargs)
 
-        self.fields['character'].queryset = Character.objects.filter(account=user.get_profile())
+        try:
+            profile = user.get_profile()
+        except:
+            profile = None
 
-        profile = user.get_profile()
+        self.fields['character'].queryset = Character.objects.filter(account=profile)
+
         if hasattr(profile, 'default_character'):
             if user.get_profile().default_character is not None:
                 self.initial['character'] = user.get_profile().default_character
