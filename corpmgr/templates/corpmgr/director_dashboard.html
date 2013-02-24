@@ -22,7 +22,7 @@
     {% for corpprof in director_of %}
     <tr>
         <td><a href="/corps/director/{{ corpprof.corporation.corp_id }}/">{{ corpprof.corporation.name }}</a></td>
-        <td>{{ pending_apps }}
+        <td>{{ corpprof.pending_applications|length }}</td>
     </tr>    
     {% endfor %}
     </tbody>
