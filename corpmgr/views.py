@@ -181,7 +181,7 @@ class DirectorCorpView(TemplateResponseMixin, View):
                     if CAstatus[0] is status:
                         status_text = CAstatus[1]
 
-            pending_apps = profile.get_applications(status)
+            pending_apps = profile.get_applications(status).order_by('-last_modified')
 
             cdict = {
                     'pending_apps': pending_apps,
@@ -242,9 +242,11 @@ class DirectorAppUpdate(TemplateResponseMixin, View):
                 application.save()
             if status is 1:
                 application.pending()
+                application.reviewed_by = user.get_profile()
                 application.save()
             if status is -1:
                 application.reject()
+                application.rejected_by = user.get_profile()
                 application.save()
 
             return redirect("/corps/director/%d/" % (corp_id,))
