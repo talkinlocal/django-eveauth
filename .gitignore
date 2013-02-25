@@ -1,4 +1,14 @@
 *.pyc
 *.db
+*.bak
+*.log
+*.pid
 settings.py
+*/static/*
 static/*
+*/site_media/*
+celery
+celerybeat-schedule
+djextdirect
+evedjango
+djangokb

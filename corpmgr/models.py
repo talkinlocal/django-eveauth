@@ -124,6 +124,19 @@ class ApplicationMixin(models.Model):
     def is_approved(self):
         return self.status == 2
 
+    def is_pending(self):
+        return self.status == 1
+
+    def is_rejected(self):
+        return self.status == -1
+
+    def status_text(self):
+        for status in self.STATUS_CHOICES:
+            if status[0] is self.status:
+                return status[1]
+
+        return 'Unknown'
+
 class Recommendation(models.Model):
     account = models.ForeignKey(Account, related_name='app_recommendations')
     application_type = models.ForeignKey(ContentType)
@@ -146,6 +159,14 @@ class CorporationApplication(ApplicationMixin):
 
     class Meta:
         unique_together = ('character', 'corporation_profile')
+
+    def get_reddit(self):
+        if self.corporation_profile.reddit_required:
+            account = self.character.account
+            reddit_account = account.reddit_account
+            return reddit_account
+
+        return None
 
     def __unicode__(self):
         return u"%s application for %s" % (self.corporation_profile, self.character)

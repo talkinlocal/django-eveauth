@@ -149,7 +149,6 @@ class CorpApplicationDeleteView(BSDeleteView):
 
 class DirectorCorpView(TemplateResponseMixin, View):
     template_name = "corpmgr/director_corp_dashboard.html"
-    statuses = {'new': (0,1), 'pending': 1, 'approved': 2 }
     
     def get(self, request, **kwargs):
         corp_id = kwargs.get('corpid', None)
@@ -169,16 +168,26 @@ class DirectorCorpView(TemplateResponseMixin, View):
             if not profile.has_director(user):
                 return redirect("/account/login/")
 
-            status_code = getattr(kwargs, 'status', None)
+            status = kwargs.get('status', None)
 
-            if status_code is None:
-                status_code = 'new'
+            status_text = ""
 
-            status = self.statuses[status_code]
+            if status is None:
+                status = (0,1)
+                status_text = "New / Pending"
+            else:
+                for CAstatus in CorporationApplication.STATUS_CHOICES:
+                    if CAstatus[0] is status:
+                        status_text = CAstatus[1]
 
-            pending_apps = profile.pending_applications(status)
+            pending_apps = profile.get_applications(status)
 
-            cdict = {'pending_apps': pending_apps,}
+            cdict = {
+                    'pending_apps': pending_apps,
+                    'status_text': status_text,
+                    'status': status,
+                    'corp': corporation,
+                    }
 
             rc = RequestContext(request, cdict)
 
@@ -233,7 +242,58 @@ class DirectorAppUpdate(TemplateResponseMixin, View):
             if status is 1:
                 application.pending()
                 application.save()
+            if status is -1:
+                application.reject()
+                application.save()
 
             return redirect("/corps/director/%d/" % (corp_id,))
+        else:
+            return redirect("/account/login/")
 
         return TemplateResponse(request, self.template_name, {'corpid': corp_id, 'status': 'new'})
+
+class DirectorCharacterReport(TemplateResponseMixin, View):
+    template_name = "corpmgr/director_character_report.html"
+
+    def get(self, request, **kwargs):
+        user = request.user
+        
+        character = Character.objects.get(character_id = kwargs.get('charid', None))
+
+        try:
+            corp_profile = character.corp.mgmt_profile
+        except CorporationProfile.DoesNotExist:
+            corp_profile = None
+
+        if corp_profile is not None:
+            if corp_profile.reddit_required:
+                reddit = character.account.reddit_account
+            else:
+                reddit = None
+
+            cdict = {
+                    'character': character,
+                    'corp': character.corp,
+                    'reddit': reddit,
+                    }
+
+            if corp_profile.has_director(user):
+                rc = RequestContext(request, cdict)
+                return self.render_to_response(rc)
+            else:
+                return redirect("/")
+        else:
+            
+            cdict = {
+                    'character': character,
+                    'corp': character.corp,
+                    }
+
+            from templatetags.corpmgr_extras import is_director
+            if is_director(user):
+                rc = RequestContext(request, cdict)
+                return self.render_to_response(rc)
+            else:
+                return redirect("/")
+
+        return redirect("/")
