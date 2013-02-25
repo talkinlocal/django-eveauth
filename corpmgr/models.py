@@ -12,7 +12,7 @@ class CorporationProfile(models.Model):
     director_group = models.OneToOneField(Group, related_name='directors_of')
     api_mask = models.IntegerField()
     reddit_required = models.BooleanField(default=False)
-    alliance_profile = models.ForeignKey('AllianceProfile', related_name='member_corp_profiles', blank=False, null=True)
+    alliance_profile = models.ForeignKey('AllianceProfile', related_name='member_corp_profiles', blank=True, null=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     last_modified = models.DateTimeField(auto_now=True)
 
