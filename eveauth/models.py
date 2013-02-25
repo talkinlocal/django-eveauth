@@ -91,6 +91,7 @@ class UserJID(models.Model):
 class Corporation(models.Model):
     corp_id = models.IntegerField(primary_key=True, unique=True)
     name = models.CharField(max_length=128, help_text="Corporation name")
+    ticker = models.CharField(max_length=8, help_text="Corporation ticker", blank=True, default="")
 
     def generate_logo(self, api_key):
         api = eveapi.EVEAPIConnection()
@@ -105,6 +106,10 @@ class Corporation(models.Model):
         tnsize = 32, 32
         small.thumbnail(tnsize)
         small.save(os.path.join(settings.PACKAGE_ROOT, "site_media/static/logos/%i.thumb.png" % (self.corp_id,) ))
+        
+        # TODO: Refactor!
+        self.ticker = corpsheet.ticker
+        self.save()
     
     def get_logo_url(self, thumb=True):
         filename = "%i.png" % self.corp_id
