@@ -143,6 +143,7 @@ class MyCorpApplicationsView(CreatedByView):
 
 class CorpApplicationDeleteView(BSDeleteView):
     model = CorporationApplication
+    template_name = "corpmgr/app_delete.html"
 
     def get_success_url(self):
         return reverse('corpmgr_my_corp_app')

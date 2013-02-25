@@ -22,7 +22,7 @@
                 {% for application in object_list %}
                 <tr>
                     {% block each_tr %}
-                    <td>{{ application.character }}</td><td>{{ application.corporation_profile }}</td><td>{{ application.status }}</td><td>{{ application.created_on }}</td><td>{{ application.last_modified }}</td><td><a href="{{ application.pk }}/delete/" class="btn btn-danger">Delete</a></td>
+                    <td>{{ application.character }}</td><td><img src="{{ application.corporation_profile.corporation.get_logo_url }}"/> {{ application.corporation_profile }}</td><td>{{ application.status_text }}</td><td>{{ application.created_on }}</td><td>{{ application.last_modified }}</td><td><a href="{{ application.pk }}/delete/" class="btn btn-danger">Delete</a></td>
                     {% endblock %}
                 </tr>
                 {% endfor %}
