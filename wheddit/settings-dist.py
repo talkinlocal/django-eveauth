@@ -1,22 +1,24 @@
 import os
+#from pybb.settings import *
 
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 PACKAGE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
+#DEBUG = False
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = [
-    # ("Your Name", "your_email@example.com"),
+   ("John Doe", "anonymous@example.com"),
 ]
 
 MANAGERS = ADMINS
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "dev.db",
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'dev.db',
     }
 }
 
@@ -53,7 +55,7 @@ MEDIA_ROOT = os.path.join(PACKAGE_ROOT, "site_media", "media")
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = "/site_media/media/"
+MEDIA_URL = "http://media.wheddit.com/media/"
 
 # Absolute path to the directory static files should be collected to.
 # Don"t put anything in this directory yourself; store your static files
@@ -63,7 +65,7 @@ STATIC_ROOT = os.path.join(PACKAGE_ROOT, "site_media", "static")
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = "/site_media/static/"
+STATIC_URL = "http://media.wheddit.com/static/"
 
 # Additional locations of static files
 STATICFILES_DIRS = [
@@ -78,7 +80,7 @@ STATICFILES_FINDERS = [
 ]
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = "u9fr7aske+@y%-npcl%_-71=%n@nv=o1p0m!#gkn0k4z#m$5##"
+SECRET_KEY = "sanitized"
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = [
@@ -97,6 +99,7 @@ TEMPLATE_CONTEXT_PROCESSORS = [
     "django.contrib.messages.context_processors.messages",
     "pinax_utils.context_processors.settings",
     "account.context_processors.account",
+    #"djangohelper.context_processors.ctx_config",
 ]
 
 
@@ -106,6 +109,8 @@ MIDDLEWARE_CLASSES = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "pagination.middleware.PaginationMiddleware",
+    "onlineuser.middleware.OnlineUserMiddleware",
 ]
 
 ROOT_URLCONF = "wheddit.urls"
@@ -126,20 +131,36 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
-    
+
     # theme
     "pinax_theme_bootstrap_account",
     "pinax_theme_bootstrap",
     "django_forms_bootstrap",
-    
+
     # external
     "account",
     "metron",
-    "eveauth",
-    "corpmgr",
-    "forum",
     "south",
-    
+    "bootstrap",
+    "djcelery",
+    "redis",
+    "celery",
+
+    # project
+    "eveauth",
+    "vreddit",
+    "kombu.transport.django",
+    "oauth_provider",
+    "pagination",
+    "simpleavatar",
+    "onlineuser",
+    "attachments",
+    "forum",
+    "corpmgr",
+
+    #Testing
+    #"mumble",
+    #"djextdirect",
 ]
 
 # A sample logging configuration. The only tangible logging
@@ -175,16 +196,122 @@ FIXTURE_DIRS = [
     os.path.join(PROJECT_ROOT, "fixtures"),
 ]
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 25
+#EMAIL_HOST = 'smtp.googlemail.com'
+#EMAIL_PORT = 465
+#EMAIL_HOST_USER = 'wheddit@gmail.com'
+#EMAIL_HOST_PASSWORD = 'sanitized'
+DEFAULT_FROM_EMAIL = 'admin@wheddit.com'
 
+
+THEME_ACCOUNT_ADMIN_URL = 'http://beta.wheddit.com/admin'
+AUTH_PROFILE_MODULE = "account.Account"
 ACCOUNT_OPEN_SIGNUP = True
 ACCOUNT_USE_OPENID = False
-ACCOUNT_REQUIRED_EMAIL = False
-ACCOUNT_EMAIL_VERIFICATION = False
+ACCOUNT_REQUIRED_EMAIL = True
+ACCOUNT_EMAIL_VERIFICATION = True
 ACCOUNT_EMAIL_AUTHENTICATION = False
-ACCOUNT_UNIQUE_EMAIL = EMAIL_CONFIRMATION_UNIQUE_EMAIL = False
+ACCOUNT_UNIQUE_EMAIL = EMAIL_CONFIRMATION_UNIQUE_EMAIL = True
 ACCOUNT_LOGIN_REDIRECT_URL = "home"
 ACCOUNT_LOGOUT_REDIRECT_URL = "home"
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 2
-REDDIT_LOGIN_UNIQUE = "example"
-AUTH_PROFILE_MODULE = "account.Account"
+
+# Celery setup
+
+#BROKER_URL = 'redis://'
+BROKER_URL = "django://"
+#BROKER_URL = "amqp://sanitized:sanitized@localhost:5672//"
+
+#BROKER_HOST = 'localhost'
+#BROKER_BACKEND = 'redis'
+FORUM_USE_REDIS = True
+FORUM_REDIS_PORT = 6379
+FORUM_REDIS_HOST = "localhost"
+#BROKER_USER = ""
+#BROKER_VHOST = "0"
+#REDIS_DB = 0
+#REDIS_CONNECT_RETRY = True
+#CELERY_SEND_EVENTS = True
+#CELERY_RESULT_BACKEND = 'redis'
+CELERY_TASK_RESULT_EXPIRES = 120
+#CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
+
+#BROKER_PORT = 5672
+#BROKER_USER = 'sanitized'
+#BROKER_PASSWORD = 'sanitized'
+#BROKER_VHOST = 'beta'
+
+CELERY_ALWAYS_EAGER = True
+CELERYD_LOG_LEVEL = 'DEBUG'
+
+CELERY_IMPORTS = (
+        "eveauth.tasks",
+        "vreddit.tasks",
+)
+
+import djcelery
+djcelery.setup_loader()
+
+# Activity / metron
+METRON_ACTIVITY_SESSION_KEY_NAME = "_beta_metron_activity"
+
+METRON_SETTINGS = {
+        "mixpanel": {
+            "1": "55343cfca66ea221c898ac77c72bd2b6", # Beta
+            "2": "", # Production
+            },
+        }
+
+TUNNEL_EJABBERD_AUTH_GATEWAY_LOG = os.path.join(PROJECT_ROOT, "ejabber.log")
+
+# Reddit stuff
+REDDIT_CONFIRMATION_EXPIRE_DAYS = 10
+REDDIT_LOGIN_UNIQUE = True
+REDDIT_USER = 'sanitized'
+REDDIT_PASSWORD = 'sanitized'
+REDDIT_USER_AGENT = 'Wormbro Reddit Verification Bot'
+REDDIT_BOT_URL = 'http://beta.wheddit.com'
+REDDIT_AUTH_SUBJECT = 'Wormbro Verification'
+
+# Oauth Setup
+OAUTH_REALM_KEY_NAME = 'http://beta.wheddit.com'
+
+CTX_CONFIG = {}
+
+LOGIN_URL = '/account/login'
+
+BBCODE_AUTO_URLS = True
+
+HTML_SAFE_TAGS = ['embed']
+HTML_SAFE_ATTRS = ['allowscriptaccess', 'allowfullscreen', 'wmode']
+HTML_UNSAFE_TAGS = []
+HTML_UNSAFE_ATTRS = []
+
+# forum
+
+FORUM_STANDALONE = False
+FORUM_USE_REDIS = False
+FORUM_POST_FORMATTER = 'forum.formatters.BBCodeFormatter'
+FORUM_USE_DEFAULT_CHAR = True
+
+# Corp Manager
+
+# Minimum api key mask (the bare minimum for access to SOME of our services)
+EVE_CORP_MIN_MASK = 8388608
+TUNNEL_EJABBERD_AUTH_GATEWAY_LOG = "/var/django/DEV/log/jabber_bridge.log"
+
+import logging
+TUNNEL_EJABBERD_AUTH_GATEWAY_LOG_LEVEL = logging.DEBUG
+
+
+# Mumble Options
+TEST_MURMUR_LAB_DIR = "/var/django/DEV/murmur"
+TEST_MURMUR_FILES_DIR = "/var/django/DEV/wheddit/murmur"
+DEFAULT_CONN = 'Meta:tcp -h 127.0.0.1 -p 6502'
+SLICE = '/usr/share/slice/Murmur.ice'                          ##
+SLICEDIR = '/usr/share/slice'                                  ##
+MUMBLE_DJANGO_URL  = '/'                                       ##
+MUMBLE_DJANGO_ROOT = '/var/django/DEV/wheddit'
