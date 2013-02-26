@@ -32,8 +32,8 @@ What's included
  * EVE-aware(ish) Forums
 
 
- Common Issues
- =============
+Common Issues
+===============
 
 The latest versions of ubuntu and debian have issues with PIL not including
 zlib support.  Please look up instructions on how to get PIL and zlib working
