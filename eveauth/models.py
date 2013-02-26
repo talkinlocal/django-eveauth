@@ -12,8 +12,10 @@ from django.utils.translation import gettext_lazy as _
 
 class APIKey(models.Model):
     account = models.ForeignKey(Account, related_name='apikeys')
-    api_id = models.IntegerField(primary_key=True, unique=True, help_text="The number ID of your API key")
-    vcode = models.CharField(max_length=255, help_text="The verification code of your API key")
+    api_id = models.IntegerField(primary_key=True, unique=True,
+            help_text="The number ID of your API key")
+    vcode = models.CharField(max_length=255,
+            help_text="The verification code of your API key")
     date_added = models.DateTimeField(default=timezone.now)
 
     def get_characters(self):
@@ -219,6 +221,7 @@ class Alliance(models.Model):
     alliance_id = models.IntegerField(primary_key=True)
     alliance_name = models.CharField(max_length=128)
     executor = models.ForeignKey(Corporation, related_name='executor_of')
+    ticker = models.CharField(max_length=8, help_text="Alliance ticker", blank=True, default="")
 
     def has_member(self, user):
         alliance_profile = self.mgmt_profile

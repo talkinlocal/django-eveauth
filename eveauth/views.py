@@ -160,12 +160,18 @@ class APIKeyCreateView(BSCreateView):
     def form_invalid(self, form):
         from django.conf import settings
 
+        error_message = """
+Our minimum API key mask is '8'.  You can start with a predefined key 
+<a href="https://support.eveonline.com/api/Key/CreatePredefined/%s">here</a>
+Your key must contain all characters, not just one.
+Please assure you meet these requirements.
+"""
         if settings.EVE_CORP_MIN_MASK:
-            messages.error(self.request, mark_safe("Your API key is either invalid or is not made to our requirements.  Please use at least our <a href='https://support.eveonline.com/api/key/CreatePredefined/%s' target='_blank'>minimum key</a>." % (
+            messages.error(self.request, mark_safe( error_message % (
                 settings.EVE_CORP_MIN_MASK
                 )))
         else:
-            messages.error(self.request, mark_safe("Your API key is either invalid or is not made to our requirements.  Please use at least our <a href='https://support.eveonline.com/api/key/CreatePredefined/128854392' target='_blank'>minimum key</a>."))
+            messages.error(self.request, mark_safe( error_message % (8,)))
         return self.render_to_response(self.get_context_data(form=form))
 
     def get_success_url(self):

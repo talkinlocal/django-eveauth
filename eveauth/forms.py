@@ -48,23 +48,34 @@ class APIKeyForm(forms.ModelForm):
 
         access_mask = keyinfo.key.accessMask
         key_type = keyinfo.key.type
+        is_mask = False
+        acceptable_masks = []
 
         from django.conf import settings
         
         if "corpmgr" in settings.INSTALLED_APPS:
             from corpmgr.models import CorporationProfile
-            api_masks = []
             if settings.EVE_CORP_MIN_MASK:
-                api_masks.append(settings.EVE_CORP_MIN_MASK)
+                acceptable_masks.append(settings.EVE_CORP_MIN_MASK)
             corp_profiles = CorporationProfile.objects.all()
             if corp_profiles.exists():
                 for corp in corp_profiles:
-                    api_masks.append(corp.api_mask)
-        
-            is_mask = (access_mask in api_masks) or ((access_mask & 82321730) == 82321730)
+                    acceptable_masks.append(corp.api_mask)
 
-        is_type = key_type in (u'Account', u'Corporation')
-        if not is_mask or not is_type:
-            raise forms.ValidationError("API Key Invalid - you MUST use at least mask 8388608 and most importantly, <strong>Character</strong> with <strong>All characters selected</strong> for key attributes!")
+        if len(acceptable_masks) is 0:
+            acceptable_masks.append(8)
 
-        return cleaned_data
+        for mask in acceptable_masks:
+            if (access_mask is mask) or ((access_mask & mask) == mask):
+                is_mask = True
+
+        if key_type == 'Account':
+            if is_mask:
+                return cleaned_data
+        elif key_type == 'Corporation':
+            return cleaned_data
+        else:
+            raise forms.ValidationError("No matching key masks or types.")
+
+        # Fall through
+        raise forms.ValidationError("No matching key masks or types.")

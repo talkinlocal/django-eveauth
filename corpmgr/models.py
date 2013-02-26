@@ -1,10 +1,13 @@
 from django.db import models
-from eveauth.models import Corporation, Character, Alliance
+from eveauth.models import Corporation, Character, Alliance, APIKey
 from account.models import Account
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 import managers
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class CorporationProfile(models.Model):
     corporation = models.OneToOneField(Corporation, related_name='mgmt_profile')
@@ -183,3 +186,71 @@ class AllianceApplication(ApplicationMixin):
     rejected_by = models.ForeignKey(Account, null=True, default=None, related_name='crp_applications_rejected')
     objects = managers.AllianceAppMgr()
 
+
+# Signals because circular
+
+@receiver(post_save, sender=APIKey)
+def key_type_automater(sender, instance, created, **kwargs):
+    key_type = instance.get_key_type()
+    if key_type == 'Corporation':
+        import sys
+        conn = instance.get_api_connection()
+        corpsheet = conn.corp.CorporationSheet()
+        corpID = corpsheet.corporationID
+        allianceID = corpsheet.allianceID
+
+        print >> sys.stderr, "AllianceID: %s ; CorpID: %s; Dump %s" % (allianceID, corpID, corpsheet)
+
+        def add_alliance(allianceID, group):
+            try:
+                auth_alliance = Alliance.objects.get(alliance_id = allianceID)
+            except Alliance.DoesNotExist:
+                # TODO: ACTUALLY discover the executor; likely easier done with the djangokb api handler.
+                auth_alliance = Alliance(
+                                    alliance_id = allianceID,
+                                    alliance_name = corpsheet.allianceName,
+                                    executor = auth_corp
+                                )
+
+            auth_alliance.save()
+            alliance_profile = AllianceProfile(
+                    alliance = auth_alliance,
+                    manager = instance.account.user,
+                    director_group = group,
+                    api_mask = None,
+                    )
+
+            alliance_profile.save()
+            return alliance_profile
+
+        try:
+            auth_corp = Corporation.objects.get(pk=corpID)
+
+        except Corporation.DoesNotExist:
+            auth_corp = Corporation(corp_id=corpID,name=corpsheet.corporationName)
+            auth_corp.save()
+            auth_corp.generate_logo(instance)
+
+        try:
+            corp_profile = CorporationProfile.objects.get(corporation=auth_corp)
+
+        except CorporationProfile.DoesNotExist:
+            group_name = "%s directors" % (auth_corp.name,)
+            new_group = Group(name=group_name)
+            new_group.save()
+            corp_profile = CorporationProfile(
+                        corporation = auth_corp,
+                        manager = instance.account.user,
+                        director_group = new_group,
+                        api_mask = 8,
+                        reddit_required = False,
+                        alliance_profile = None,
+                    )
+            new_group.user_set.add(instance.account.user)
+            new_group.save()
+
+            if allianceID:
+                alliance_profile = add_alliance(allianceID,new_group)
+                corp_profile.alliance_profile = alliance_profile
+
+            corp_profile.save()
