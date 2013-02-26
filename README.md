@@ -14,6 +14,7 @@ install the corplogos folder below.
     $ cd mysite
     $ source mysite/bin/activate
     (mysite)$ pip install -r requirements.txt
+    (mysite)$ ln -s ./wheddit/settings-dist.py ./wheddit/settings.py
     (mysite)$ python manage.py syncdb
     (mysite)$ python manage.py migrate
     (mysite)$ cp -rp /path/to/corplogos eveauth/static/
