@@ -161,9 +161,16 @@ class APIKeyCreateView(BSCreateView):
         from django.conf import settings
 
         error_message = """
-Our minimum API key mask is '8'.  You can start with a predefined key 
+The site's minimum API key mask is '8'.  You can start with a predefined key 
 <a href="https://support.eveonline.com/api/Key/CreatePredefined/%s">here</a>
-Your key must contain all characters, not just one.
+
+One or more of the following issues were found with your API key:
+
+    1. Your key must contain all characters, not just one.
+    2. Your API mask did not meet the minimum requirements.
+    3. If this is a Corporation key, the corp in question must not exist.
+    4. If this is a Corporation key, it must have a minimum API mask of 8.
+
 Please assure you meet these requirements.
 """
         if settings.EVE_CORP_MIN_MASK:
