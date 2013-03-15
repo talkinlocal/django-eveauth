@@ -270,6 +270,9 @@ TUNNEL_EJABBERD_AUTH_GATEWAY_LOG = os.path.join(PROJECT_ROOT, "ejabber.log")
 # Reddit stuff
 REDDIT_CONFIRMATION_EXPIRE_DAYS = 10
 REDDIT_LOGIN_UNIQUE = True
+REDDIT_USE_OAUTH = True
+REDDIT_APP_ID = 'sanitized'
+REDDIT_APP_SECRET = 'sanitized'
 REDDIT_USER = 'sanitized'
 REDDIT_PASSWORD = 'sanitized'
 REDDIT_USER_AGENT = 'Wormbro Reddit Verification Bot'

@@ -18,6 +18,8 @@ class RedditAccount(models.Model):
 
     account = models.OneToOneField(Account, primary_key=True, related_name='reddit_account')
     reddit_login = models.CharField(max_length=128, unique=settings.REDDIT_LOGIN_UNIQUE)
+    refresh_token = models.CharField(max_length=128, null=True)
+    access_token = models.CharField(max_length=128, null=True)
     verified = models.BooleanField(default=False)
     
     objects = managers.RedditAccountManager()
