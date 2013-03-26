@@ -35,13 +35,13 @@ class APIKey(models.Model):
 
     def get_key_mask(self):
         eve_auth = self.get_api_connection()
+        access_mask = 0
+
         try:
             keyinfo = eve_auth.account.APIKeyInfo()
+            access_mask = keyinfo.key.accessMask
         except:
-            # Welp
-            pass
-
-        access_mask = keyinfo.key.accessMask
+            access_mask = 0
 
         return access_mask
 

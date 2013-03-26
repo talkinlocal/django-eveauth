@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from account.models import Account
 from datetime import datetime, timedelta
-import eveapi, os, Image, managers
+import eveapi, os, Image, managers, praw
 
 from django.contrib.auth.models import User, AnonymousUser
 from django.contrib.sites.models import Site

@@ -30,6 +30,7 @@
             </ul>
         </li>
         <li><a href="{% url "corpmgr_corp_apply" %}">{% trans "Apply" %}</a></li>
+        <li><a href="{% url "corpmgr_my_corp_app" %}">{% trans "My Applications" %}</a></li>
         <li><a href="{% url "forum_index" %}">{% trans "Forums" %}</a></li>
         {% if request.user|is_director %}
         <li><a href="{% url "director_dashboard" %}">{% trans "Directors" %}</a></li>
