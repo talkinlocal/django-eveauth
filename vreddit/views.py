@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
+from django.conf import settings
 
 from datetime import datetime
 
@@ -22,6 +23,9 @@ from models import RedditAccount, RedditConfirmation
 from forms import RedditAccountForm
 
 import os
+
+from hashlib import sha1
+import praw
 
 class OwnerDetailsView(FormView):
     pass
@@ -108,3 +112,74 @@ class RedditConfirmationView(OwnerDetailsView):
 
             return self.render_to_response(rc)
 
+def generate_state_key(pre_code, secret, username):
+    pre_state = "%s%s" % (secret,username)
+    key = sha1(pre_state).hexdigest()
+    state_key = "%s%s" % (pre_code,key)
+    return 
+
+def get_reddit_client(redirect_uri):
+    r  = praw.Reddit(
+            'Talk In Local - talkinlocal.org reddit verification v1.0'
+            )
+
+    r.set_oauth_app_info(
+            client_id = settings.REDDIT_APP_ID,
+            client_secret = settings.REDDIT_APP_SECRET,
+            redirect_uri=redirect_uri)
+
+    return r
+
+class RedditVerifyView(View):
+    template_name = "vreddit/verify.html"
+    def get(self, request, *args, **kwargs):
+        auth_url = 'https://ssl.reddit.com/api/v1/' # TODO: move this to settings.py
+        try:
+            redditacct = RedditAccount.objects.get(account=request.user.get_profile())
+            # TODO: add a message indicating they already have a reddit account linked
+            return redirect('/')
+        except RedditAccount.DoesNotExist:
+            pass
+
+        redirect_uri = request.build_absolute_uri(reverse('reddit-return'))
+        # This should always be the same.
+        state_key = "TILVerify"
+        # TODO: Make configurable
+        r = get_reddit_client(redirect_uri)
+        url = r.get_authorize_url(state_key, 'identity', False)
+
+        return redirect(url)
+
+class RedditReturnView(View,TemplateResponseMixin):
+    template_name = "vreddit/oauth_return.html"
+    
+    def get(self, request, *args, **kwargs):
+        incoming_code = request.GET.get('code', None)
+        incoming_state = request.GET.get('state', None)
+        if incoming_code and incoming_state:
+            state_key = "TILVerify"
+            if state_key == incoming_state:
+                r = get_reddit_client(request.build_absolute_uri(reverse('reddit-return')))
+                access_information = r.get_access_information(incoming_code)
+                authenticated_user = r.get_me()
+
+                try:
+                    reddit = RedditAccount.objects.get(reddit_login=authenticated_user.name)
+                    # TODO: pass an error
+                    redirect('/')
+                except RedditAccount.DoesNotExist:
+                    # Good
+                    reddit = RedditAccount(
+                            account = request.user.get_profile(),
+                            reddit_login = authenticated_user.name,
+                            verified = True,
+                            access_token = access_information['access_token'],
+                            refresh_token = access_information['refresh_token'],
+                            )
+
+                    reddit.save()
+
+        else:
+            messages.error(self.request, mark_safe("unknown error: %s" % (request.GET,)))
+
+        return redirect('/')

@@ -44,7 +44,6 @@
 #
 
 import sys,os
-sys.path.append('/var/django/DEV/lib/Ice-3.3.1/python')
 import Ice
 import thread
 import urllib2
@@ -84,8 +83,8 @@ cfgfile = 'djangoauth.ini'
 default = { 'user':(('id_offset', int, 1000000000),
                     ('reject_on_error', x2bool, True)),
 
-            'django':(('root_path', str, '/var/django/DEV/wheddit'),
-                    ('settings_module', str, 'wheddit.settings')),
+            'django':(('root_path', str, '/srv/talkinlocal.org/app'),
+                    ('settings_module', str, 'talkinlocal.settings')),
                     
             'ice':(('host', str, '127.0.0.1'),
                    ('port', int, 6502),
