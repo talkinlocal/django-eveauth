@@ -1,5 +1,5 @@
 """
-WSGI config for wheddit project.
+WSGI config for talkinlocal project.
 
 This module contains the WSGI application used by Django's development server
 and any production WSGI deployments. It should expose a module-level variable
@@ -15,15 +15,15 @@ framework.
 """
 import os,sys
 
-sys.path.append('/srv/dev01/lib/python2.7/lib-dynload')
-sys.path.append('/srv/dev01/lib/python2.7/site-packages')
+sys.path.append('/srv/talkinlocal.org/lib/python2.7/lib-dynload')
+sys.path.append('/srv/talkinlocal.org/lib/python2.7/site-packages')
 
 import site
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wheddit.settings")
-os.environ.setdefault("HOME", "/srv/dev01")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "talkinlocal.settings")
+os.environ.setdefault("HOME", "/srv/talkinlocal.org")
 
-site.addsitedir('/srv/dev01/lib/python2.7/site-packages')
+site.addsitedir('/srv/talkinlocal.org/lib/python2.7/site-packages')
 
 # This application object is used by any WSGI server configured to use this
 # file. This includes Django's development server, if the WSGI_APPLICATION
