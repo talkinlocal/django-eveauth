@@ -136,8 +136,11 @@ class RedditVerifyView(View):
         auth_url = 'https://ssl.reddit.com/api/v1/' # TODO: move this to settings.py
         try:
             redditacct = RedditAccount.objects.get(account=request.user.get_profile())
-            # TODO: add a message indicating they already have a reddit account linked
-            return redirect('/')
+            if redditacct.access_token:
+                messages.error(self.request, mark_safe("Your account is already linked to: %s" % (redditacct.reddit_login)))
+                return redirect('/')
+            else:
+                messages.warning(self.request, mark_safe("Old reddit verification found, processed new verification."))
         except RedditAccount.DoesNotExist:
             pass
 
@@ -165,8 +168,16 @@ class RedditReturnView(View,TemplateResponseMixin):
 
                 try:
                     reddit = RedditAccount.objects.get(reddit_login=authenticated_user.name)
-                    # TODO: pass an error
-                    redirect('/')
+                    if reddit.access_token:
+                        messages.error(self.request, mark_safe("An account is already linked to: %s" % (reddit.reddit_login)))
+                        redirect('/')
+                    if reddit.account == request.user.get_profile():
+                        reddit.access_token = access_information['access_token']
+                        messages.success(self.request, mark_safe("Converted old verification for reddit account: %s" % (authenticated_user.name,)))
+                    else:
+                        messages.error(self.request, mark_safe("Your account is already linked to: %s and does not match this link request: %s" % (reddit.reddit_login, authenticated_user.name)))
+                        redirect('/')
+
                 except RedditAccount.DoesNotExist:
                     # Good
                     reddit = RedditAccount(
@@ -177,9 +188,10 @@ class RedditReturnView(View,TemplateResponseMixin):
                             refresh_token = access_information['refresh_token'],
                             )
 
+                finally:
                     reddit.save()
 
         else:
-            messages.error(self.request, mark_safe("unknown error: %s" % (request.GET,)))
+            messages.error(request, mark_safe("unknown error: %s" % (request.GET,)))
 
         return redirect('/')

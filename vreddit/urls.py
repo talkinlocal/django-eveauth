@@ -6,5 +6,6 @@ from views import *
 
 urlpatterns = patterns("vreddit.views",
 
-        url(r'^account/$', RedditConfirmationView.as_view(), name="reddit_confirmation"),
+        url(r'^account/$', RedditVerifyView.as_view(), name="reddit_confirmation"),
+        url(r'^authret/$', RedditReturnView.as_view(), name="reddit-return"),
 )
