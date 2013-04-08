@@ -88,6 +88,18 @@ class AllianceProfile(models.Model):
             # Safer this way.
             return False
 
+class Coalition(models.Model):
+    name = models.CharField(max_length=80, unique=True)
+    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+    last_modified = models.DateTimeField(auto_now=True)
+
+class CoalitionProfile(models.Model):
+    coalition = models.OneToOneField(Coalition, related_name='mgmt_profile')
+    manager = models.ForeignKey(User, related_name='coalitions_managed')
+    director_group = models.OneToOneField(Group, related_name='coalition_managers_of')
+    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+    last_modified = models.DateTimeField(auto_now=True)
+
 class ApplicationMixin(models.Model):
     REJECTED = -1
     NEW = 0
