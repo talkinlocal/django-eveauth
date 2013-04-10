@@ -33,8 +33,8 @@ class CorporationProfile(models.Model):
         return self.director_group.users.all()
 
     def is_alliance(self):
-        if hasattr(self, 'executor_of'):
-            if self.executor_of.exists():
+        if hasattr(self.corporation, 'executor_of'):
+            if self.corporation.executor_of.exists():
                 return True
 
         return False
@@ -97,6 +97,22 @@ class CoalitionProfile(models.Model):
     coalition = models.OneToOneField(Coalition, related_name='mgmt_profile')
     manager = models.ForeignKey(User, related_name='coalitions_managed')
     director_group = models.OneToOneField(Group, related_name='coalition_managers_of')
+    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+    last_modified = models.DateTimeField(auto_now=True)
+
+    def has_director(self, user):
+        try:
+            return self.director_group in user.groups.all()
+        except:
+            # Safer this way.
+            return False
+
+class GroupProfile(models.Model):
+    group = models.OneToOneField(Group, related_name='mgmt_profile')
+    manager = models.ForeignKey(User, related_name='groups_managed')
+    org_type = models.ForeignKey(ContentType)
+    org_id = models.PositiveIntegerField()
+    org_obj = generic.GenericForeignKey('org_type', 'org_id')
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     last_modified = models.DateTimeField(auto_now=True)
 
