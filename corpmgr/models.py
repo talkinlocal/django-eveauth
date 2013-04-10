@@ -213,12 +213,15 @@ def key_type_automater(sender, instance, created, **kwargs):
                                 )
 
             auth_alliance.save()
-            alliance_profile = AllianceProfile(
-                    alliance = auth_alliance,
-                    manager = instance.account.user,
-                    director_group = group,
-                    api_mask = None,
-                    )
+            try:
+                alliance_profile = AllianceProfile.objects.get(alliance = auth_alliance)
+            except AllianceProfile.DoesNotExist:
+                alliance_profile = AllianceProfile(
+                        alliance = auth_alliance,
+                        manager = instance.account.user,
+                        director_group = group,
+                        api_mask = None,
+                        )
 
             alliance_profile.save()
             return alliance_profile
