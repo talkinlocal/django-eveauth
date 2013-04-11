@@ -13,7 +13,8 @@ class CharacterAdmin(admin.ModelAdmin):
     search_fields=['character_name','corp__name','corp__ticker']
     list_display = (
             'character_name',
-            'corp'
+            'corp',
+            'account'
             )
     list_select_related = True
 
