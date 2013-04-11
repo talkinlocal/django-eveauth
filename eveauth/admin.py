@@ -10,7 +10,12 @@ class APIKeyAdmin(admin.ModelAdmin):
             )
 
 class CharacterAdmin(admin.ModelAdmin):
-    pass
+    search_fields=['character_name','corp__name','corp__ticker']
+    list_display = (
+            'character_name',
+            'corp'
+            )
+    list_select_related = True
 
 class CharacterSheetAdmin(admin.ModelAdmin):
     pass
