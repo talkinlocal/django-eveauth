@@ -1,0 +1,38 @@
+{% extends "corpmgr_base.html" %}
+
+{% load i18n %}
+
+{% block body %}
+{% block content %}
+<div class="well">
+    <p>
+    Choose the character to apply as:
+    </p>
+    <br/>
+    <form action="" method="POST">
+        {% block form %}
+            {% csrf_token %}
+
+            {{ wizard.management_form }}
+            {% if wizard.form.forms %}
+                {{ wizard.form.management_form }}
+                {% for form in wizard.form.forms %}
+                    {{ form }}
+                {% endfor %}
+            {% else %}
+                {{ wizard.form }}
+            {% endif %}
+
+            {% if wizard.steps.prev %}
+            <button name="wizard_goto_step" type="submit" class="btn" value="{{ wizard.steps.first }}">{% trans "first step" %}</button>
+            <button name="wizard_goto_step" type="submit" class="btn" value="{{ wizard.steps.prev }}">{% trans "prev step" %}</button>
+            {% endif %}
+            <input type="submit" class="btn" value="{% trans "submit" %}"/>
+        {% endblock %}
+    </form>
+</div>
+{% endblock %}
+{% endblock %}
+{% block extra_script %}
+
+{% endblock %}
