@@ -250,6 +250,7 @@ CELERYD_LOG_LEVEL = 'DEBUG'
 CELERY_IMPORTS = (
         "eveauth.tasks",
         "vreddit.tasks",
+        "corpmgr.tasks",
 )
 
 import djcelery
