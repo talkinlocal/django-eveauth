@@ -1,6 +1,7 @@
 from django.db import models
 from eveauth.models import Corporation, Character, Alliance, APIKey
 from account.models import Account
+from tasks import update_standings
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
@@ -45,12 +46,12 @@ class CorporationProfile(models.Model):
             if status is not None:
                 try:
                     apps = CorporationApplication.objects.filter(
-                            corporation_profile = self, 
+                            corporation_profile = self,
                             status__in = status,
                             )
                 except:
                     apps = CorporationApplication.objects.filter(
-                            corporation_profile = self, 
+                            corporation_profile = self,
                             status = status,
                             )
 
@@ -63,6 +64,13 @@ class CorporationProfile(models.Model):
     def pending_applications(self, status=None):
         apps = self.get_applications((0,1))
         return apps
+
+    def standings_with(self, contactID):
+        try:
+            standings_entry = CorporationStandingsEntry.objects.get(corporation=self.corporation, contact_id=contactID)
+            return (standings_entry.standing, StandingsConstants().get_standings_string(standings_entry.standing))
+        except CorporationStandingsEntry.DoesNotExist:
+            return (0, StandingsConstants.Neutral)
 
     def __str__(self):
         return "<Corporation Profile: %s>" % (self.corporation.name,)
@@ -87,6 +95,13 @@ class AllianceProfile(models.Model):
         except:
             # Safer this way.
             return False
+
+    def standings_with(self, contactID):
+        try:
+            standings_entry = AllianceStandingsEntry.objects.get(alliance=self.alliance, contact_id=contactID)
+            return (standings_entry.standing, StandingsConstants().get_standings_string(standings_entry.standing))
+        except AllianceStandingsEntry.DoesNotExist:
+            return (0, StandingsConstants.Neutral)
 
 class Coalition(models.Model):
     name = models.CharField(max_length=80, unique=True)
@@ -214,9 +229,133 @@ class AllianceApplication(ApplicationMixin):
     rejected_by = models.ForeignKey(Account, null=True, default=None, related_name='crp_applications_rejected')
     objects = managers.AllianceAppMgr()
 
+class StandingsConstants():
+    Excellent = 'Excellent'
+    Good = 'Good'
+    Neutral = 'Neutral'
+    Bad = 'Bad'
+    Terrible = 'Terrible'
+
+    Character = 'Character'
+    Corporation = 'Corporation'
+    Alliance = 'Alliance'
+    def get_standings_string(self, standing):
+        if standing == -10:
+            return self.Terrible
+        if standing < 0:
+            return self.Bad
+        if standing == 0:
+            return self.Neutral
+        if standing < 10:
+            return self.Good
+        if standing == 10:
+            return self.Excellent
+
+        return self.Neutral
+
+class CorporationStandingsEntry(models.Model):
+    corporation = models.ForeignKey(Corporation)
+    contact_type = models.CharField(max_length=12)
+    standing = models.DecimalField(max_digits=3, decimal_places=1)
+    contact_id = models.IntegerField()
+
+class AllianceStandingsEntry(models.Model):
+    alliance = models.ForeignKey(Alliance)
+    contact_type = models.CharField(max_length=12)
+    standing = models.DecimalField(max_digits=3, decimal_places=1)
+    contact_id = models.IntegerField()
+
+class EveauthObjectHelper():
+    def __init__(self, instance):
+        self.connection = instance.get_api_connection()
+        self.alliance_list = self.connection.eve.AllianceList().alliances
+
+    def get_alliance_from_auth(self, allianceID):
+        for alliance in self.alliance_list:
+            if alliance.allianceID == allianceID:
+                return alliance
+        return None
+
+    def get_corporation(self, corporationID):
+        try:
+            corp = Corporation.objects.get(pk=corporationID)
+            return corp
+        except Corporation.DoesNotExist:
+            corpsheet = self.connection.corp.CorporationSheet(corporationID=corporationID)
+            corp = Corporation(corp_id=corporationID, name=corpsheet.corporationName)
+            corp.save()
+            corp.generate_logo(self.instance)
+            return corp
+
+    def get_alliance(self, allianceID):
+        try:
+            alliance = Alliance.objects.get(pk=allianceID)
+            return alliance
+        except Alliance.DoesNotExist:
+            alliance_object = self.get_alliance_from_auth(allianceID)
+            alliance = Alliance(alliance_id=alliance_object.allianceID)
+            alliance.alliance_name = alliance_object.allianceName
+            alliance.executor = self.get_corporation(alliance_object.executorCorpID)
+            alliance.save()
+            return alliance
+
+    def update_contacts_from_api(self, corporationID, allianceID):
+        print 'update_contacts_from_api'
+        def UpdateContact(auth, contactID):
+            try:
+                corp = Corporation.objects.get(pk=contactID)
+                return StandingsConstants.Corporation
+            except Corporation.DoesNotExist:
+                try:
+                    corp_sheet = auth.corp.CorporationSheet(corporationID=contactID)
+                    corp = Corporation(corp_id=contactID, name=corp_sheet.corporationName)
+                    corp.save()
+                    return StandingsConstants.Corporation
+                except:
+                    pass
+            try:
+                alliance = Alliance.objects.get(pk=contactID)
+                return StandingsConstants.Alliance
+            except Alliance.DoesNotExist:
+                auth_alliance = self.get_alliance_from_auth(contactID)
+                if auth_alliance is not None:
+                    executor_corp = self.get_corporation(auth_alliance.executorCorpID)
+                    alliance = Alliance(alliance_id = contactID, alliance_name = auth_alliance.name, executor = executor_corp)
+                    alliance.save()
+                    return StandingsConstants.Alliance
+            return StandingsConstants.Character
+
+        contact_list = self.connection.corp.ContactList()
+        corp_list = contact_list.corporateContactList
+        corp = self.get_corporation(corporationID)
+
+        for contact in corp_list:
+            try:
+                standings_entry = CorporationStandingsEntry.objects.get(corporation=corp, contact_id=contact.contactID)
+                standings_entry.standing = contact.standing
+                standings_entry.save()
+            except CorporationStandingsEntry.DoesNotExist:
+                contact_type = UpdateContact(self.connection, contact.contactID)
+                standings_entry = CorporationStandingsEntry(corporation=corp, contact_id=contact.contactID)
+                standings_entry.contact_type = contact_type
+                standings_entry.standing = contact.standing
+                standings_entry.save()
+
+        if allianceID:
+            corp_alliance_list = contact_list.allianceContactList
+            auth_alliance = self.get_alliance(allianceID)
+            for contact in corp_alliance_list:
+                try:
+                    standings_entry = AllianceStandingsEntry.objects.get(alliance=auth_alliance, contact_id = contact.contactID)
+                    standings_entry.standing = contact.standing
+                except AllianceStandingsEntry.DoesNotExist:
+                    contact_type = UpdateContact(self.connection, contact.contactID)
+                    standings_entry = AllianceStandingsEntry(alliance=auth_alliance, contact_id=contact.contactID)
+                    standings_entry.contact_type = contact_type
+                    standings_entry.standing = contact.standing
+                    standings_entry.save()
 
 # Signals because circular
-
 @receiver(post_save, sender=APIKey)
 def key_type_automater(sender, instance, created, **kwargs):
     key_type = instance.get_key_type()
@@ -233,11 +372,12 @@ def key_type_automater(sender, instance, created, **kwargs):
             try:
                 auth_alliance = Alliance.objects.get(alliance_id = allianceID)
             except Alliance.DoesNotExist:
-                # TODO: ACTUALLY discover the executor; likely easier done with the djangokb api handler.
+                alliance = EveauthObjectHelper(conn).get_alliance_from_auth(allianceID)
+                executor_corp = EveauthObjectHelper(conn).get_corporation(alliance.executorCorpID)
                 auth_alliance = Alliance(
                                     alliance_id = allianceID,
                                     alliance_name = corpsheet.allianceName,
-                                    executor = auth_corp
+                                    executor = executor_corp
                                 )
 
             auth_alliance.save()
@@ -254,6 +394,7 @@ def key_type_automater(sender, instance, created, **kwargs):
             alliance_profile.save()
             return alliance_profile
 
+        auth_corp = None
         try:
             auth_corp = Corporation.objects.get(pk=corpID)
 
@@ -285,3 +426,4 @@ def key_type_automater(sender, instance, created, **kwargs):
                 corp_profile.alliance_profile = alliance_profile
 
             corp_profile.save()
+        update_standings.delay(instance, corpID, allianceID)
