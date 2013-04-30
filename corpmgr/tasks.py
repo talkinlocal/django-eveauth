@@ -13,4 +13,4 @@ def update_standings(conn, corpID, allianceID):
         import sys
         print sys.exc_info()[1]
 
-update_standings.soft_time_limit="3600"
+update_standings.soft_time_limit=3600
