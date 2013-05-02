@@ -22,12 +22,12 @@
     <div class="btn-group">
         <h3>Corporation-required Keys</h3>
             {% for corp_profile in corporation_profiles %}
-            <a href="https://support.eveonline.com/api/Key/CreatePredefined/{{ corp_profile.api_mask }}" class="btn" target="_blank"><img title="{{ corp_profile.corporation.name }}" src="{{ corp_profile.corporation.get_logo_url }}"/></a>
+            <a href="http://community.eveonline.com/support/api-key/CreatePredefined?accessMask={{ corp_profile.api_mask }}" class="btn" target="_blank"><img title="{{ corp_profile.corporation.name }}" src="{{ corp_profile.corporation.get_logo_url }}"/></a>
             {% endfor %}
     </div>
     {% else %}
     <div class="btn-group">
-    <a href="https://support.eveonline.com/api/Key/CreatePredefined/82321730" class="btn btn-primary" target="_blank">Pre-defined Key</a>
+    <a href="http://community.eveonline.com/support/api-key/CreatePredefined?accessMask=82321730" class="btn btn-primary" target="_blank">Pre-defined Key</a>
     </div>
     {% endif %}
 </div>
