@@ -102,7 +102,8 @@ class CorpApplicationView(BaseApplicationView):
         messages.error(self.request,
 """
 Either your API Key does not meet the corporate minimum requirements,
-or your CEO key does not have the necessary information.
+you already have a pending app with that character, 
+or the CEO's management profile does not have the necessary information.
 """)
         return self.render_to_response(self.get_context_data(form=form))
 

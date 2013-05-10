@@ -431,6 +431,9 @@ def delete_forum(request, forum_id):
         return permission_denied(request)
     forum = get_object_or_404(Forum.objects.select_related(), pk=forum_id)
     section = forum.section
+    if section.is_managed():
+        if not section.is_corp_authed(request.user):
+            raise Http404
     if app_settings.USE_REDIS:
         redis.seen_user(request.user, 'Deleting a forum')
     if request.method == 'POST':
@@ -487,6 +490,10 @@ def add_topic(request, forum_id):
     Adds a Topic to a Forum.
     """
     forum = get_object_or_404(Forum.objects.select_related(), pk=forum_id)
+    if forum.section.is_managed():
+        if not forum.section.is_corp_authed(request.user):
+            return permission_denied(request,
+                    message="You are not a member of the appropriate corporation, alliance or coalition.")
     preview = None
     if app_settings.USE_REDIS:
         redis.seen_user(request.user, 'Adding a new topic')
@@ -593,6 +600,10 @@ def edit_topic(request, topic_id):
         filters['hidden'] = False
     topic = get_object_or_404(Topic, **filters)
     forum = Forum.objects.select_related().get(pk=topic.forum_id)
+    if forum.section.is_managed():
+        if not forum.section.is_corp_authed(request.user):
+            return permission_denied(request,
+                    message="You are not a member of the appropriate corporation, alliance or coalition.")
     if not auth.user_can_edit_topic(request.user, topic):
         return permission_denied(request,
             message='You do not have permission to edit this topic.')
@@ -643,6 +654,10 @@ def delete_topic(request, topic_id):
         return permission_denied(request,
             message='You do not have permission to delete this topic.')
     forum = Forum.objects.select_related().get(pk=topic.forum_id)
+    if forum.section.is_managed():
+        if not forum.section.is_corp_authed(request.user):
+            return permission_denied(request,
+                    message="You are not a member of the appropriate corporation, alliance or coalition.")
     if app_settings.USE_REDIS:
         redis.seen_user(request.user, 'Deleting a Topic')
     if request.method == 'POST':
@@ -730,6 +745,9 @@ def add_reply(request, topic_id, meta=False, quote_post=None):
     if not auth.is_moderator(request.user):
         filters['hidden'] = False
     topic = get_object_or_404(Topic, **filters)
+    if topic.forum.section.is_managed():
+        if not topic.forum.section.is_corp_authed(request.user):
+            raise Http404
     if topic.locked and \
        not auth.is_moderator(request.user):
         return permission_denied(request,
@@ -857,6 +875,10 @@ def edit_post(request, post_id):
         return permission_denied(request,
             message='You do not have permission to edit this post.')
     forum = Forum.objects.select_related().get(pk=topic.forum_id)
+    if forum.section.is_managed():
+        if not forum.section.is_corp_authed(request.user):
+            return permission_denied(request,
+                    message="You are not a member of the appropriate corporation, alliance or coalition.")
     meta_editable = auth.is_moderator(request.user)
     if meta_editable:
         was_meta = post.meta
@@ -907,6 +929,15 @@ def delete_post(request, post_id):
     if not request.user.is_authenticated() or \
        not auth.is_moderator(request.user):
         filters['topic__hidden'] = False
+    post = get_object_or_404(Post, **filters)
+    topic = post.topic
+    if not auth.user_can_edit_post(request.user, post, topic):
+        return permission_denied(request,
+            message='You do not have permission to edit this post.')
+    forum = Forum.objects.select_related().get(pk=topic.forum_id)
+    if forum.section.is_managed():
+        if not forum.section.is_corp_authed(request.user):
+            raise Http404
     post = get_object_or_404(Post.objects.with_user_details(), **filters)
     topic = post.topic
     if not auth.user_can_edit_post(request.user, post, topic):
