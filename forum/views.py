@@ -431,6 +431,9 @@ def delete_forum(request, forum_id):
         return permission_denied(request)
     forum = get_object_or_404(Forum.objects.select_related(), pk=forum_id)
     section = forum.section
+    if section.is_managed():
+        if not section.is_corp_authed(request.user):
+            raise Http404
     if app_settings.USE_REDIS:
         redis.seen_user(request.user, 'Deleting a forum')
     if request.method == 'POST':
@@ -926,6 +929,15 @@ def delete_post(request, post_id):
     if not request.user.is_authenticated() or \
        not auth.is_moderator(request.user):
         filters['topic__hidden'] = False
+    post = get_object_or_404(Post, **filters)
+    topic = post.topic
+    if not auth.user_can_edit_post(request.user, post, topic):
+        return permission_denied(request,
+            message='You do not have permission to edit this post.')
+    forum = Forum.objects.select_related().get(pk=topic.forum_id)
+    if forum.section.is_managed():
+        if not forum.section.is_corp_authed(request.user):
+            raise Http404
     post = get_object_or_404(Post.objects.with_user_details(), **filters)
     topic = post.topic
     if not auth.user_can_edit_post(request.user, post, topic):
