@@ -43,8 +43,8 @@ class CharacterUpdateView(TemplateResponseMixin, View):
     def get(self, request):
         user = self.request.user
 
-        #update_characters(user)
-        update_characters.delay(user)
+        update_characters(user)
+        #update_characters.delay(user)
 
         allchars = []
 
