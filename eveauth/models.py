@@ -178,7 +178,10 @@ class Character(models.Model):
 
             character = cls(account=apikey.account,api_key=apikey,character_id=retchar_id,corp=corp,character_name=retchar.name)
             character.save()
-            char_details = api_auth.eve.CharacterInfo(characterID=character.character_id)
+            try:
+                char_details = api_auth.eve.CharacterInfo(characterID=character.character_id)
+            except:
+                char_details = None
             
             try:
                 cs = CharacterSheet.objects.get(pk=character)
