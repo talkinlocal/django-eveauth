@@ -301,3 +301,12 @@ class DirectorCharacterReport(TemplateResponseMixin, View):
                 return redirect("/")
 
         return redirect("/")
+
+class DirectorStandingsReport(TemplateResponseMixin, View):
+    template_name = "corpmgr/standings_list.html"
+
+    def get(self, request, **kwargs):
+        corp_standings = CorporationStandingsEntry.objects.order_by('contact_type')
+        alliance_standings = AllianceStandingsEntry.objects.order_by('contact_type')
+        rc = RequestContext(request, {'corp_standings': corp_standings})
+        return self.render_to_response(rc)

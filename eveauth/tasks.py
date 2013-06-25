@@ -1,7 +1,8 @@
-from models import *
+from models import Character
 
-from celery.decorators import task
+from celery import task
 from celery.exceptions import SoftTimeLimitExceeded
+
 
 @task(ignore_result=True)
 def update_characters(user):
@@ -12,4 +13,5 @@ def update_characters(user):
         for apikey in user.account.apikeys.all():
             Character.update_from_api(apikey)
 
-update_characters.soft_time_limit="3600"
+
+update_characters.soft_time_limit = 3600

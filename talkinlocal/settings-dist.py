@@ -1,20 +1,25 @@
 import os
-#from pybb.settings import *
+import djcelery
+import logging
+
+from datetime import timedelta
 
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 PACKAGE_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-#DEBUG = False
+# TODO: Set this to 'False' before deployment
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = [
-   ("John Doe", "anonymous@example.com"),
+    ("John Doe", "anonymous@example.com"),
 ]
 
 MANAGERS = ADMINS
 
+# TODO: Change settings here to use a real database suche as Postgresql
+# See https://docs.djangoproject.com/en/1.4/topics/install/#database-installation
 DATABASES = {
     "default": {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -55,7 +60,7 @@ MEDIA_ROOT = os.path.join(PACKAGE_ROOT, "site_media", "media")
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = "http://media.wheddit.com/media/"
+MEDIA_URL = "/media/"
 
 # Absolute path to the directory static files should be collected to.
 # Don"t put anything in this directory yourself; store your static files
@@ -65,7 +70,7 @@ STATIC_ROOT = os.path.join(PACKAGE_ROOT, "site_media", "static")
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = "http://media.wheddit.com/static/"
+STATIC_URL = "/static/"
 
 # Additional locations of static files
 STATICFILES_DIRS = [
@@ -102,7 +107,6 @@ TEMPLATE_CONTEXT_PROCESSORS = [
     #"djangohelper.context_processors.ctx_config",
 ]
 
-
 MIDDLEWARE_CLASSES = [
     "django.middleware.common.CommonMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -113,10 +117,10 @@ MIDDLEWARE_CLASSES = [
     "onlineuser.middleware.OnlineUserMiddleware",
 ]
 
-ROOT_URLCONF = "wheddit.urls"
+ROOT_URLCONF = "talkinlocal.urls"
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = "wheddit.wsgi.application"
+WSGI_APPLICATION = "talkinlocal.wsgi.application"
 
 TEMPLATE_DIRS = [
     os.path.join(PACKAGE_ROOT, "templates"),
@@ -168,15 +172,29 @@ INSTALLED_APPS = [
 # the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
+# TODO: Proper logging for ERROR level messages into the server log - this configuration just prints to console
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     "filters": {
         "require_debug_false": {
             "()": "django.utils.log.RequireDebugFalse"
         }
     },
     "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple"
+        },
         "mail_admins": {
             "level": "ERROR",
             "filters": ["require_debug_false"],
@@ -185,10 +203,20 @@ LOGGING = {
     },
     "loggers": {
         "django.request": {
-            "handlers": ["mail_admins"],
+            "handlers": ["mail_admins", "console"],
             "level": "ERROR",
             "propagate": True,
         },
+        "eveauth": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "corpmgr": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        }
     }
 }
 
@@ -206,7 +234,6 @@ EMAIL_PORT = 25
 #EMAIL_HOST_PASSWORD = 'sanitized'
 DEFAULT_FROM_EMAIL = 'admin@wheddit.com'
 
-
 THEME_ACCOUNT_ADMIN_URL = 'http://beta.wheddit.com/admin'
 AUTH_PROFILE_MODULE = "account.Account"
 ACCOUNT_OPEN_SIGNUP = True
@@ -220,53 +247,40 @@ ACCOUNT_LOGOUT_REDIRECT_URL = "home"
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 2
 
 # Celery setup
-
-#BROKER_URL = 'redis://'
+# TODO: This setup uses the django database, change to redis for deployment
 BROKER_URL = "django://"
-#BROKER_URL = "amqp://sanitized:sanitized@localhost:5672//"
-
-#BROKER_HOST = 'localhost'
-#BROKER_BACKEND = 'redis'
-FORUM_USE_REDIS = True
-FORUM_REDIS_PORT = 6379
-FORUM_REDIS_HOST = "localhost"
-#BROKER_USER = ""
-#BROKER_VHOST = "0"
-#REDIS_DB = 0
-#REDIS_CONNECT_RETRY = True
-#CELERY_SEND_EVENTS = True
-#CELERY_RESULT_BACKEND = 'redis'
+# CELERY_RESULT_BACKEND = "django://"
 CELERY_TASK_RESULT_EXPIRES = 120
-#CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
-
-#BROKER_PORT = 5672
-#BROKER_USER = 'sanitized'
-#BROKER_PASSWORD = 'sanitized'
-#BROKER_VHOST = 'beta'
-
-CELERY_ALWAYS_EAGER = True
-CELERYD_LOG_LEVEL = 'DEBUG'
-
+CELERY_ALWAYS_EAGER = False
+CELERY_TIMEZONE = 'UTC'
 CELERY_IMPORTS = (
-        "eveauth.tasks",
-        "vreddit.tasks",
-        "corpmgr.tasks",
+    "eveauth.tasks",
+    "vreddit.tasks",
+    "corpmgr.tasks",
 )
+CELERYBEAT_SCHEDULE = {
+    'update-standings': {
+        'task': 'corpmgr.tasks.update_all_standings',
+        'schedule': timedelta(minutes=60),
+    },
+    'process-reddit-queue': {
+        'task': 'vreddit.tasks.process_reddit_queue',
+        'schedule': timedelta(minutes=5),
+    },
+}
 
-import djcelery
 djcelery.setup_loader()
 
 # Activity / metron
 METRON_ACTIVITY_SESSION_KEY_NAME = "_beta_metron_activity"
 
 METRON_SETTINGS = {
-        "mixpanel": {
-            "1": "55343cfca66ea221c898ac77c72bd2b6", # Beta
-            "2": "", # Production
-            },
-        }
+    "mixpanel": {
+        "1": "55343cfca66ea221c898ac77c72bd2b6",  # Beta
+        "2": "",  # Production
+    },
+}
 
-TUNNEL_EJABBERD_AUTH_GATEWAY_LOG = os.path.join(PROJECT_ROOT, "ejabber.log")
 
 # Reddit stuff
 REDDIT_CONFIRMATION_EXPIRE_DAYS = 10
@@ -282,11 +296,14 @@ REDDIT_AUTH_SUBJECT = 'Wormbro Verification'
 
 # Oauth Setup
 OAUTH_REALM_KEY_NAME = 'http://beta.wheddit.com'
-
 CTX_CONFIG = {}
-
 LOGIN_URL = '/account/login'
 
+# Forum Settings
+FORUM_STANDALONE = False
+FORUM_USE_REDIS = False
+FORUM_POST_FORMATTER = 'forum.formatters.BBCodeFormatter'
+FORUM_USE_DEFAULT_CHAR = True
 BBCODE_AUTO_URLS = True
 
 HTML_SAFE_TAGS = ['embed']
@@ -294,28 +311,20 @@ HTML_SAFE_ATTRS = ['allowscriptaccess', 'allowfullscreen', 'wmode']
 HTML_UNSAFE_TAGS = []
 HTML_UNSAFE_ATTRS = []
 
-# forum
-
-FORUM_STANDALONE = False
-FORUM_USE_REDIS = False
-FORUM_POST_FORMATTER = 'forum.formatters.BBCodeFormatter'
-FORUM_USE_DEFAULT_CHAR = True
-
 # Corp Manager
-
 # Minimum api key mask (the bare minimum for access to SOME of our services)
 EVE_CORP_MIN_MASK = 8388608
+
+# ejabberd settings
 TUNNEL_EJABBERD_AUTH_GATEWAY_LOG = "/var/django/DEV/log/jabber_bridge.log"
-
-import logging
+TUNNEL_EJABBERD_AUTH_GATEWAY_LOG = os.path.join(PROJECT_ROOT, "ejabber.log")
 TUNNEL_EJABBERD_AUTH_GATEWAY_LOG_LEVEL = logging.DEBUG
-
 
 # Mumble Options
 TEST_MURMUR_LAB_DIR = "/var/django/DEV/murmur"
 TEST_MURMUR_FILES_DIR = "/var/django/DEV/wheddit/murmur"
 DEFAULT_CONN = 'Meta:tcp -h 127.0.0.1 -p 6502'
-SLICE = '/usr/share/slice/Murmur.ice'                          ##
-SLICEDIR = '/usr/share/slice'                                  ##
-MUMBLE_DJANGO_URL  = '/'                                       ##
+SLICE = '/usr/share/slice/Murmur.ice'
+SLICEDIR = '/usr/share/slice'
+MUMBLE_DJANGO_URL = '/'
 MUMBLE_DJANGO_ROOT = '/var/django/DEV/wheddit'

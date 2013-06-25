@@ -2,6 +2,7 @@ from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -12,11 +13,11 @@ from datetime import datetime
 from decorators import group_required, multigroup_required
 
 from bootstrap.views import (
-                            CreateView as BSCreateView,
-                            UpdateView as BSUpdateView,
-                            ListView as BSListView,
-                            DeleteView as BSDeleteView,
-                            )
+    CreateView as BSCreateView,
+    UpdateView as BSUpdateView,
+    ListView as BSListView,
+    DeleteView as BSDeleteView,
+    )
 from django.views.generic.base import RedirectView, View, TemplateResponseMixin
 from django.views.generic.edit import FormView
 
@@ -36,6 +37,7 @@ if "corpmgr" in settings.INSTALLED_APPS:
 from forms import APIKeyForm, DefaultCharacterForm
 import os
 
+
 class CharacterUpdateView(TemplateResponseMixin, View):
     model = Character
     template_name = "eveauth/character_list.html"
@@ -43,7 +45,6 @@ class CharacterUpdateView(TemplateResponseMixin, View):
     def get(self, request):
         user = self.request.user
 
-        #update_characters(user)
         update_characters.delay(user)
 
         allchars = []
@@ -57,14 +58,15 @@ class CharacterUpdateView(TemplateResponseMixin, View):
             rc = RequestContext(request, context)
             return redirect("/account/login/")
 
-        # for apikey in user.get_profile().apikeys.all():
+            # for apikey in user.get_profile().apikeys.all():
             # allchars.append([char for char in apikey.characters.all()])
 
         context = self.get_context_data()
         #context = dict(context.items() + {'object_list': allchars}.items())
 
         rc = RequestContext(request, context)
-        messages.success(self.request, "Backend API request submitted.  Normally this takes seconds to complete, but can take up to 2 hours under heavy load.")
+        messages.success(self.request,
+                         "Backend API request submitted.  Normally this takes seconds to complete, but can take up to 2 hours under heavy load.")
 
         return redirect("/auth/characters/")
         #return self.render_to_response(rc)
@@ -81,8 +83,8 @@ class CharacterUpdateView(TemplateResponseMixin, View):
 
         return cdict
 
-class OwnerListView(BSListView):
 
+class OwnerListView(BSListView):
     def get_queryset(self):
         if self.queryset is not None:
             queryset = self.queryset
@@ -95,7 +97,7 @@ class OwnerListView(BSListView):
                 queryset = []
         else:
             raise ImproperlyConfigured("'%s' must define 'queryset' or 'model'"
-                                        % self.__class__.__name__)
+                                       % self.__class__.__name__)
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -110,11 +112,12 @@ class OwnerListView(BSListView):
 
         return context
 
+
 class APIKeyListView(OwnerListView):
     model = APIKey
 
     def _get_create_url(self):
-        return reverse('apikey_add') 
+        return reverse('apikey_add')
 
 
 class CharacterListView(OwnerListView):
@@ -123,6 +126,7 @@ class CharacterListView(OwnerListView):
 
     def _get_create_url(self):
         return ''
+
 
 class APIKeyDeleteView(BSDeleteView):
     model = APIKey
@@ -148,9 +152,9 @@ class APIKeyCreateView(BSCreateView):
             try:
                 from metron import activity
 
-                activity.add(request, "mixpanel", "track", "API Added", {
+                activity.add(self.request, "mixpanel", "track", "API Added", {
                     "user": u.username,
-                    })
+                })
             except:
                 pass
             return super(APIKeyCreateView, self).form_valid(form)
@@ -161,7 +165,7 @@ class APIKeyCreateView(BSCreateView):
         from django.conf import settings
 
         error_message = """
-The site's minimum API key mask is '8'.  You can start with a predefined key 
+The site's minimum API key mask is '%s'.  You can start with a predefined key
 <a href="https://support.eveonline.com/api/Key/CreatePredefined/%s">here</a>
 
 One or more of the following issues were found with your API key:
@@ -174,11 +178,11 @@ One or more of the following issues were found with your API key:
 Please assure you meet these requirements.
 """
         if settings.EVE_CORP_MIN_MASK:
-            messages.error(self.request, mark_safe( error_message % (
+            messages.error(self.request, mark_safe(error_message % (
                 settings.EVE_CORP_MIN_MASK
-                )))
+            )))
         else:
-            messages.error(self.request, mark_safe( error_message % (8,)))
+            messages.error(self.request, mark_safe(error_message % (8,)))
         return self.render_to_response(self.get_context_data(form=form))
 
     def get_success_url(self):
@@ -198,6 +202,7 @@ Please assure you meet these requirements.
         context.update(kwargs)
 
         return super(APIKeyCreateView, self).get_context_data(**context)
+
 
 class APIKeyUpdateView(BSUpdateView):
     model = APIKey

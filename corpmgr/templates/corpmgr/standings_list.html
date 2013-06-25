@@ -1,0 +1,20 @@
+{% extends "corpmgr_base.html" %}
+
+{% load i18n %}
+
+{% block body %}
+{% block content %}
+
+    <div>
+    <table>
+    {% for corp_entry in corp_standings %}
+<tr>
+<td>{{ corp_entry.corporation.name }}</td>
+<td>{{ corp_entry.contact_type }}</td>
+</tr>
+    {% endfor %}
+    </table>
+    </div>
+
+{% endblock %}
+{% endblock %}
