@@ -12,3 +12,5 @@ celerybeat-schedule
 djextdirect
 evedjango
 djangokb
+.vagrant
+.idea
