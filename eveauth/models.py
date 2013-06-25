@@ -1,21 +1,23 @@
-from django.db import models
-from django.conf import settings
+import django.core.exceptions
+import eveapi
+import Image
+import logging
+import os
+
 from account.models import Account
-import eveapi, os, Image, managers
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.db import models
+from django.utils import timezone
 
-from django.contrib.auth.models import User, AnonymousUser
-from django.contrib.sites.models import Site
-from django.db.models.signals import post_save
-
-from django.utils import timezone, translation
-from django.utils.translation import gettext_lazy as _
 
 class APIKey(models.Model):
     account = models.ForeignKey(Account, related_name='apikeys')
     api_id = models.IntegerField(primary_key=True, unique=True,
-            help_text="The number ID of your API key")
+                                 help_text="The number ID of your API key")
     vcode = models.CharField(max_length=255,
-            help_text="The verification code of your API key")
+                             help_text="The verification code of your API key")
+    key_type = models.CharField(max_length=12, default='')
     date_added = models.DateTimeField(default=timezone.now)
 
     def get_characters(self):
@@ -24,6 +26,7 @@ class APIKey(models.Model):
 
     def get_formatted_characters(self):
         return ", ".join([char.__str__() for char in self.get_characters()])
+
     get_formatted_characters.short_description = "Characters"
 
 
@@ -35,7 +38,6 @@ class APIKey(models.Model):
 
     def get_key_mask(self):
         eve_auth = self.get_api_connection()
-        access_mask = 0
 
         try:
             keyinfo = eve_auth.account.APIKeyInfo()
@@ -45,15 +47,21 @@ class APIKey(models.Model):
 
         return access_mask
 
+    # TODO: This needs refactored to remove this method and just use self.key_type directly in other code
     def get_key_type(self):
-        eve_auth = self.get_api_connection()
-        return eve_auth.account.APIKeyInfo().key.type
+        if not self.key_type or len(self.key_type) == 0:
+            print('updating key type')
+            eve_auth = self.get_api_connection()
+            self.key_type = eve_auth.account.APIKeyInfo().key.type
+            self.save()
+        return self.key_type
 
     def __unicode__(self):
-        return u"%s - %s (added %s)" % ( self.api_id, self.vcode, self.date_added) 
+        return u"%s - %s [%s] (added %s)" % (self.api_id, self.vcode, self.key_type, self.date_added)
 
     def __str__(self):
         return str(self.__unicode__())
+
 
 class UserJID(models.Model):
     site_user = models.OneToOneField(User, related_name='jid', primary_key=True)
@@ -83,7 +91,7 @@ class UserJID(models.Model):
                     except User.DoesNotExist:
                         # because they asked for a THIS dang it!
                         return cls.objects.get(node=user.username.lower(), domain=domain)
-                    # Create one
+                        # Create one
                     return cls(node=user.username.lower(), domain=domain)
 
             else:
@@ -100,30 +108,39 @@ class Corporation(models.Model):
         corpsheet = api.corp.CorporationSheet(userID=api_key.api_id, vCode=api_key.vcode, corporationID=self.corp_id)
 
         import evelogo
-        evelogo.resourcePath = os.path.join(settings.PACKAGE_ROOT, "site_media/static/corplogos/")
+
+        evelogo.resourcePath = os.path.join(settings.STATIC_ROOT, "corplogos/")
 
         logo = evelogo.CorporationLogo(corpsheet.logo)
-        logo.save(os.path.join(settings.PACKAGE_ROOT, "site_media/static/logos/%i.png" % (self.corp_id,) ))
-        small = Image.open(os.path.join(settings.PACKAGE_ROOT, "site_media/static/logos/%i.png" % (self.corp_id,) ))
+        logo.save(os.path.join(settings.MEDIA_ROOT, "logos/%i.png" % (self.corp_id,)))
+        small = Image.open(os.path.join(settings.MEDIA_ROOT, "logos/%i.png" % (self.corp_id,)))
         tnsize = 32, 32
         small.thumbnail(tnsize)
-        small.save(os.path.join(settings.PACKAGE_ROOT, "site_media/static/logos/%i.thumb.png" % (self.corp_id,) ))
-        
+        small.save(os.path.join(settings.MEDIA_ROOT, "logos/%i.thumb.png" % (self.corp_id,)))
+
         # TODO: Refactor!
         self.ticker = corpsheet.ticker
         self.save()
-    
+
     def get_logo_url(self, thumb=True):
+        logger = logging.getLogger("eveauth")
+        logger.debug("test message")
         filename = "%i.png" % self.corp_id
         if thumb:
             filename = "%i.thumb.png" % self.corp_id
-        return settings.STATIC_URL + "logos/%s" % filename
+        logger.info("Logo filename: %s" % (settings.MEDIA_ROOT + ("/logos/%s" % filename)))
+        if not os.path.exists(settings.MEDIA_ROOT + ("/logos/%s" % filename)):
+            logger.info('Logo not found, generating...')
+            api_key = Character.objects.filter(corp=self)[0].api_key
+            self.generate_logo(api_key)
+
+        return settings.MEDIA_URL + "logos/%s" % filename
 
     def __unicode__(self):
         return u"%s" % (self.name,)
 
     def __str__(self):
-        return str(self.__unicode__(),)
+        return str(self.__unicode__(), )
 
     def has_member(self, user):
         try:
@@ -138,6 +155,7 @@ class Corporation(models.Model):
 
         return False
 
+
 class Character(models.Model):
     account = models.ForeignKey(Account, related_name='all_characters')
     api_key = models.ForeignKey(APIKey, related_name='characters')
@@ -150,20 +168,23 @@ class Character(models.Model):
 
     def __str__(self):
         return str(self.character_name)
-    
+
     def get_corp_name(self):
         return self.corp.name
 
     @classmethod
     def update_from_api(cls, apikey):
         api = eveapi.EVEAPIConnection()
+        print('update_from_api %s, %s, %s' % (apikey.get_key_type(), apikey.api_id, apikey.vcode))
+        if apikey.get_key_type() == 'Corporation':
+            return []
         api_auth = api.auth(keyID=apikey.api_id, vCode=apikey.vcode)
         charlist = []
         try:
             retchars = api_auth.account.Characters()
         except:
             return []
-        
+
         for retchar in retchars.characters:
             retchar_id = retchar.characterID
             retcorp_id = retchar.corporationID
@@ -176,10 +197,11 @@ class Character(models.Model):
                 corp.generate_logo(apikey)
                 corp.save()
 
-            character = cls(account=apikey.account,api_key=apikey,character_id=retchar_id,corp=corp,character_name=retchar.name)
+            character = cls(account=apikey.account, api_key=apikey, character_id=retchar_id, corp=corp,
+                            character_name=retchar.name)
             character.save()
             char_details = api_auth.eve.CharacterInfo(characterID=character.character_id)
-            
+
             try:
                 cs = CharacterSheet.objects.get(pk=character)
             except:
@@ -187,15 +209,17 @@ class Character(models.Model):
                     alliance_id = None
                 else:
                     alliance_id = char_details.allianceID
-                    cs = CharacterSheet(character=character, corp=character.corp, alliance_id = alliance_id, sec_status = char_details.securityStatus)
+                    cs = CharacterSheet(character=character, corp=character.corp, alliance_id=alliance_id,
+                                        sec_status=char_details.securityStatus)
                     cs.last_retrieved = timezone.now()
                     cs.save()
             charlist.append(character)
-        
+
         return charlist
 
     def __unicode__(self):
         return u'%s' % (self.character_name,)
+
 
 class CharacterSheet(models.Model):
     character = models.OneToOneField(Character, primary_key=True, unique=True, related_name='sheet')
@@ -203,12 +227,13 @@ class CharacterSheet(models.Model):
     alliance_id = models.IntegerField(blank=False, null=True)
     sec_status = models.IntegerField(blank=False, null=False)
     last_retrieved = models.DateTimeField(blank=False, null=True)
-    
+
     def __unicode__(self):
         return self.character.character_name
-    
+
     def __str__(self):
         return str(self.character.character_name)
+
 
 class DefaultCharacter(models.Model):
     account = models.OneToOneField(Account, related_name='default_character')
@@ -216,6 +241,7 @@ class DefaultCharacter(models.Model):
 
     class Meta:
         unique_together = ('account', 'character')
+
 
 class Alliance(models.Model):
     alliance_id = models.IntegerField(primary_key=True)
@@ -235,7 +261,7 @@ class Alliance(models.Model):
     def __str__(self):
         return "<Alliance: %s>" % (self.alliance_name,)
 
-from account.fields import TimeZoneField
+
 from south.modelsinspector import add_introspection_rules
 
-add_introspection_rules([], ["^account\.fields\.TimeZoneField"],)
+add_introspection_rules([], ["^account\.fields\.TimeZoneField"], )
