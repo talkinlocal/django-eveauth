@@ -252,12 +252,12 @@ class AllianceStandingsEntry(models.Model):
 
 # Signals because circular
 @receiver(post_save, sender=APIKey)
-def key_type_automater(sender, apikey, created, **kwargs):
-    key_type = apikey.get_key_type()
+def key_type_automater(sender, instance, **kwargs):
+    key_type = instance.get_key_type()
     if key_type == 'Corporation':
         import sys
 
-        conn = apikey.get_api_connection()
+        conn = instance.get_api_connection()
         corpsheet = conn.corp.CorporationSheet()
         corpID = corpsheet.corporationID
         allianceID = corpsheet.allianceID
@@ -268,8 +268,8 @@ def key_type_automater(sender, apikey, created, **kwargs):
             try:
                 auth_alliance = Alliance.objects.get(alliance_id=allianceID)
             except Alliance.DoesNotExist:
-                alliance = EveauthObjectHelper(apikey).get_alliance_from_auth(allianceID)
-                executor_corp = EveauthObjectHelper(apikey).get_corporation(alliance.executorCorpID)
+                alliance = EveauthObjectHelper(instance).get_alliance_from_auth(allianceID)
+                executor_corp = EveauthObjectHelper(instance).get_corporation(alliance.executorCorpID)
                 auth_alliance = Alliance(
                     alliance_id=allianceID,
                     alliance_name=corpsheet.allianceName,
@@ -282,7 +282,7 @@ def key_type_automater(sender, apikey, created, **kwargs):
             except AllianceProfile.DoesNotExist:
                 alliance_profile = AllianceProfile(
                     alliance=auth_alliance,
-                    manager=apikey.account.user,
+                    manager=instance.account.user,
                     director_group=group,
                     api_mask=None,
                 )
@@ -297,7 +297,7 @@ def key_type_automater(sender, apikey, created, **kwargs):
         except Corporation.DoesNotExist:
             auth_corp = Corporation(corp_id=corpID, name=corpsheet.corporationName)
             auth_corp.save()
-            auth_corp.generate_logo(apikey)
+            auth_corp.generate_logo(instance)
 
         try:
             corp_profile = CorporationProfile.objects.get(corporation=auth_corp)
@@ -312,13 +312,13 @@ def key_type_automater(sender, apikey, created, **kwargs):
                 group.save()
             corp_profile = CorporationProfile(
                 corporation=auth_corp,
-                manager=apikey.account.user,
+                manager=instance.account.user,
                 director_group=group,
                 api_mask=8,
                 reddit_required=False,
                 alliance_profile=None,
             )
-            group.user_set.add(apikey.account.user)
+            group.user_set.add(instance.account.user)
             group.save()
 
             if allianceID:
@@ -327,4 +327,4 @@ def key_type_automater(sender, apikey, created, **kwargs):
 
             corp_profile.save()
 
-        update_standings.delay(apikey, corpID, allianceID)
+        update_standings.delay(instance, corpID, allianceID)
