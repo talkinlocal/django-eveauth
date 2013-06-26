@@ -106,6 +106,7 @@ class AllianceProfile(models.Model):
         except AllianceStandingsEntry.DoesNotExist:
             return (0, StandingsConstants.Neutral)
 
+
 class Coalition(models.Model):
     name = models.CharField(max_length=80, unique=True)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
@@ -133,6 +134,7 @@ class GroupProfile(models.Model):
     org_obj = generic.GenericForeignKey('org_type', 'org_id')
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     last_modified = models.DateTimeField(auto_now=True)
+
 
 class ApplicationMixin(models.Model):
     REJECTED = -1
