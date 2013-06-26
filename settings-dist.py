@@ -1,12 +1,14 @@
 import os
 import djcelery
 import logging
+import sys
 
 from datetime import timedelta
 
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 PACKAGE_ROOT = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(PACKAGE_ROOT, 'apps'))
 
 # TODO: Set this to 'False' before deployment
 DEBUG = True

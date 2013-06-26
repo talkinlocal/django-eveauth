@@ -179,7 +179,7 @@ Please assure you meet these requirements.
 """
         if settings.EVE_CORP_MIN_MASK:
             messages.error(self.request, mark_safe(error_message % (
-                settings.EVE_CORP_MIN_MASK
+                str(settings.EVE_CORP_MIN_MASK), str(settings.EVE_CORP_MIN_MASK)
             )))
         else:
             messages.error(self.request, mark_safe(error_message % (8,)))
