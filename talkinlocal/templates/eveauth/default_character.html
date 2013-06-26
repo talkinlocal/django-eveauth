@@ -1,0 +1,19 @@
+{% extends "site_base.html" %}
+
+{% load i18n }
+
+{% load url from future %}
+{% load bootstrap_tags %}
+
+{% block head_title %}Default Character{% endblock %}
+
+{% block body %}
+    <form method="POST" action="{% url "default_character" %}">
+        <legend>Select Default Character</legend>
+        {% csrf_token %}
+        {{ form|as_bootstrap }}
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Save</button>
+        </div>
+    </form>
+{% endblock %}
