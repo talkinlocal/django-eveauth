@@ -6,9 +6,10 @@ import sys
 from datetime import timedelta
 
 
-PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 PACKAGE_ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(PACKAGE_ROOT, 'apps'))
+sys.path.insert(0, os.path.join(PACKAGE_ROOT, 'libs'))
 
 # TODO: Set this to 'False' before deployment
 DEBUG = True
