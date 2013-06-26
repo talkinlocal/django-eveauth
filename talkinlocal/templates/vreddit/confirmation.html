@@ -1,0 +1,52 @@
+{% extends "site_base.html" %}
+
+{% load i18n %}
+
+{% block body %}
+{% block content %}
+{% if not has_confirmation %}
+        <form action="" method="POST">
+            {% block form %}
+                {% csrf_token %}
+
+                {% for hidden in form.hidden_fields %}
+                    {{ hidden }}
+                {% endfor %}
+                {% for field in form.visible_fields %}
+                <div class="clearfix{% if field.errors %} error{% endif %}"> 
+                    {{ field.label_tag }}
+                    <div class="input"> 
+                        {{ field }}
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <span class="help-inline">{{ error }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="help-inline">{{ field.help_text }}</span>
+                        {% endif %}
+                    </div> 
+                </div><!-- /clearfix -->
+                {% endfor %}
+                <div class="actions">
+                    {% block actions %}
+                    <button type="submit" class="btn primary">{% trans "Save" %}</button>
+                    <a href="{{ success_url }}" class="btn">{% trans "Cancel" %}</a>
+                    {% endblock %}
+                </div>
+            {% endblock %}
+        </form>
+{% else %}
+<div class="row">
+    <div class="well span4">
+        <h2>Auth Pending</h2>
+        You have one more step.  Push this button, then submit:<br/>
+        <br/><a href="http://www.reddit.com/message/compose/?to={{ site_reddit_user }}&subject={{ reddit_subject }}&message={{ confirmation.key }}" class="btn btn-primary">Send Verification</a><br/>
+        <br/>
+        To send it manually, compose a reddit message as '{{ reddit_account.reddit_login }}'.  Address the message to '{{ site_reddit_user }}' and the subject should be '{{ reddit_subject }}' (without quotes) and the only line should be this code:<br/>
+        <br/>
+        <b>{{ confirmation.key }}</b>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "eveauth/form.html" %}
+
+{% load i18n }
+
+{% block head_title_base %}{% if SITE_NAME %}{{ SITE_NAME }} | {% endif %} Add API Key {% endblock %}
+
+{% block actions %}
+<div class="row">
+    <div class="span8">
+        {{ block.super }}
+    </div>
+    <div class="span4">
+        <a href="{{ delete_url }}" class="btn btn-danger">Delete</a>
+    </div>
+{% endblock %}
