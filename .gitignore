@@ -19,4 +19,5 @@ celery.py
 logging.py
 email.py
 apps.py
+eveauth_env
 eveauth_env/*
