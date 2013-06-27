@@ -1,13 +1,10 @@
 import os
-import djcelery
-import logging
 import sys
 
-from datetime import timedelta
 
+PACKAGE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(PACKAGE_ROOT), os.pardir))
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-PACKAGE_ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(PACKAGE_ROOT, 'apps'))
 sys.path.insert(0, os.path.join(PACKAGE_ROOT, 'libs'))
 
@@ -20,15 +17,6 @@ ADMINS = [
 ]
 
 MANAGERS = ADMINS
-
-# TODO: Change settings here to use a real database such as Postgresql
-# See https://docs.djangoproject.com/en/1.4/topics/install/#database-installation
-DATABASES = {
-    "default": {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'dev.db',
-    }
-}
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -170,72 +158,9 @@ INSTALLED_APPS = [
     #"djextdirect",
 ]
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-# TODO: Proper logging for ERROR level messages into the server log - this configuration just prints to console
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-        },
-        'simple': {
-            'format': '%(levelname)s %(message)s'
-        },
-    },
-    "filters": {
-        "require_debug_false": {
-            "()": "django.utils.log.RequireDebugFalse"
-        }
-    },
-    "handlers": {
-        "console": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "simple"
-        },
-        "mail_admins": {
-            "level": "ERROR",
-            "filters": ["require_debug_false"],
-            "class": "django.utils.log.AdminEmailHandler"
-        }
-    },
-    "loggers": {
-        "django.request": {
-            "handlers": ["mail_admins", "console"],
-            "level": "ERROR",
-            "propagate": True,
-        },
-        "eveauth": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
-        "corpmgr": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "propagate": True,
-        }
-    }
-}
-
 FIXTURE_DIRS = [
     os.path.join(PROJECT_ROOT, "fixtures"),
 ]
-
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_USE_TLS = True
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 25
-#EMAIL_HOST = 'smtp.googlemail.com'
-#EMAIL_PORT = 465
-#EMAIL_HOST_USER = 'wheddit@gmail.com'
-#EMAIL_HOST_PASSWORD = 'sanitized'
-DEFAULT_FROM_EMAIL = 'admin@wheddit.com'
 
 THEME_ACCOUNT_ADMIN_URL = 'http://beta.wheddit.com/admin'
 AUTH_PROFILE_MODULE = "account.Account"
@@ -249,31 +174,6 @@ ACCOUNT_LOGIN_REDIRECT_URL = "home"
 ACCOUNT_LOGOUT_REDIRECT_URL = "home"
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 2
 
-# Celery setup
-# TODO: This setup uses the django database, change to redis for deployment
-BROKER_URL = "django://"
-# CELERY_RESULT_BACKEND = "django://"
-CELERY_TASK_RESULT_EXPIRES = 120
-CELERY_ALWAYS_EAGER = False
-CELERY_TIMEZONE = 'UTC'
-CELERY_IMPORTS = (
-    "eveauth.tasks",
-    "vreddit.tasks",
-    "corpmgr.tasks",
-)
-CELERYBEAT_SCHEDULE = {
-    'update-standings': {
-        'task': 'corpmgr.tasks.update_all_standings',
-        'schedule': timedelta(minutes=60),
-    },
-    'process-reddit-queue': {
-        'task': 'vreddit.tasks.process_reddit_queue',
-        'schedule': timedelta(minutes=5),
-    },
-}
-
-djcelery.setup_loader()
-
 # Activity / metron
 METRON_ACTIVITY_SESSION_KEY_NAME = "_beta_metron_activity"
 
@@ -284,7 +184,7 @@ METRON_SETTINGS = {
     },
 }
 
-# Reddit stuff
+# Praw settings (reddit)
 REDDIT_CONFIRMATION_EXPIRE_DAYS = 10
 REDDIT_LOGIN_UNIQUE = True
 REDDIT_USE_OAUTH = True
@@ -300,33 +200,3 @@ REDDIT_AUTH_SUBJECT = 'Wormbro Verification'
 OAUTH_REALM_KEY_NAME = 'http://beta.wheddit.com'
 CTX_CONFIG = {}
 LOGIN_URL = '/account/login'
-
-# Forum Settings
-FORUM_STANDALONE = False
-FORUM_USE_REDIS = False
-FORUM_POST_FORMATTER = 'forum.formatters.BBCodeFormatter'
-FORUM_USE_DEFAULT_CHAR = True
-BBCODE_AUTO_URLS = True
-
-HTML_SAFE_TAGS = ['embed']
-HTML_SAFE_ATTRS = ['allowscriptaccess', 'allowfullscreen', 'wmode']
-HTML_UNSAFE_TAGS = []
-HTML_UNSAFE_ATTRS = []
-
-# Corp Manager
-# Minimum api key mask (the bare minimum for access to SOME of our services)
-EVE_CORP_MIN_MASK = 8388608
-
-# ejabberd settings
-TUNNEL_EJABBERD_AUTH_GATEWAY_LOG = "/var/django/DEV/log/jabber_bridge.log"
-TUNNEL_EJABBERD_AUTH_GATEWAY_LOG = os.path.join(PROJECT_ROOT, "ejabber.log")
-TUNNEL_EJABBERD_AUTH_GATEWAY_LOG_LEVEL = logging.DEBUG
-
-# Mumble Options
-TEST_MURMUR_LAB_DIR = "/var/django/DEV/murmur"
-TEST_MURMUR_FILES_DIR = "/var/django/DEV/wheddit/murmur"
-DEFAULT_CONN = 'Meta:tcp -h 127.0.0.1 -p 6502'
-SLICE = '/usr/share/slice/Murmur.ice'
-SLICEDIR = '/usr/share/slice'
-MUMBLE_DJANGO_URL = '/'
-MUMBLE_DJANGO_ROOT = '/var/django/DEV/wheddit'
