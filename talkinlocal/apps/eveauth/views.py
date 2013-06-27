@@ -214,7 +214,6 @@ class APIKeyUpdateView(BSUpdateView):
         if u.is_authenticated():
             apikey = form.save(commit=False)
             if (apikey.account is u.account) or u.is_superuser:
-                apikey.save()
                 self.object = apikey
                 return super(APIKeyUpdateView, self).form_valid(form)
 

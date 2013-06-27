@@ -30,7 +30,7 @@ class DefaultCharacterForm(forms.ModelForm):
 class APIKeyForm(forms.ModelForm):
     class Meta:
         model = APIKey
-        exclude = ('account','date_added')
+        exclude = ('account','date_added','key_type')
 
     def clean(self):
         cleaned_data = super(APIKeyForm, self).clean()
