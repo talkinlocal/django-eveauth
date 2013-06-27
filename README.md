@@ -48,6 +48,7 @@ Vagrant Development
 A simple Vagrantfile and bootstrap.sh have been added to the repository to allow for
 quick provisioning of a development VM. After execution it should leave the vm such that
 you can simply run
+
     $ vagrant ssh
     $ cd /vagrant
     $ python manage.py runserver 0.0.0.0:8000
