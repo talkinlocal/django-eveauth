@@ -9,6 +9,7 @@ from django.dispatch import receiver
 from eveauth.models import Corporation, Character, Alliance, APIKey
 from eveauth_helper import EveauthObjectHelper, StandingsConstants
 
+import logging
 import managers
 
 
@@ -253,8 +254,9 @@ class AllianceStandingsEntry(models.Model):
 
 
 # Signals because circular
-@receiver(post_save, sender=APIKey)
+@receiver(post_save, sender=APIKey, dispatch_uid='corpmgr.models')
 def key_type_automater(sender, instance, **kwargs):
+    logger = logging.getLogger('corpmgr')
     key_type = instance.get_key_type()
     if key_type == 'Corporation':
         import sys
@@ -264,7 +266,7 @@ def key_type_automater(sender, instance, **kwargs):
         corpID = corpsheet.corporationID
         allianceID = corpsheet.allianceID
 
-        print >> sys.stderr, "AllianceID: %s ; CorpID: %s; Dump %s" % (allianceID, corpID, corpsheet)
+        logger.debug('AllianceID: %s ; CorpID: %s; Dump %s' % (allianceID, corpID, corpsheet._meta))
 
         def add_alliance(allianceID, group):
             try:

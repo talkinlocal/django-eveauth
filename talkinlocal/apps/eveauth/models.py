@@ -49,11 +49,14 @@ class APIKey(models.Model):
 
     # TODO: This needs refactored to remove this method and just use self.key_type directly in other code
     def get_key_type(self):
+        logger = logging.getLogger('eveauth')
         if not self.key_type or len(self.key_type) == 0:
-            print('updating key type')
+            logger.debug('updating key type')
+            logger.debug('key type %s' % self.key_type)
             eve_auth = self.get_api_connection()
             self.key_type = eve_auth.account.APIKeyInfo().key.type
             self.save()
+        logger.debug('returning %s for key_type' % self.key_type)
         return self.key_type
 
     def __unicode__(self):
