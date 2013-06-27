@@ -21,7 +21,7 @@ ADMINS = [
 
 MANAGERS = ADMINS
 
-# TODO: Change settings here to use a real database suche as Postgresql
+# TODO: Change settings here to use a real database such as Postgresql
 # See https://docs.djangoproject.com/en/1.4/topics/install/#database-installation
 DATABASES = {
     "default": {

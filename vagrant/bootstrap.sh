@@ -6,3 +6,7 @@ apt-get install -y build-essential python-dev python-pip git python-virtualenv p
 ln -s /usr/lib/x86_64-linux-gnu/libjpeg.so /usr/lib
 ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so /usr/lib
 ln -s /usr/lib/x86_64-linux-gnu/libz.so /usr/lib
+
+su -c 'bash /vagrant/vagrant/setup_virtualenv.sh' vagrant
+
+echo '. /vagrant/vagrant/vagrant_env/bin/activate' >> /home/vagrant/.bashrc

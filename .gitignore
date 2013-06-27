@@ -1,3 +1,4 @@
+*~*
 *.pyc
 *.db
 *.bak
@@ -10,6 +11,6 @@ static/*
 celery
 celerybeat-schedule
 djextdirect
-evedjango
-.vagrant
 .idea
+.vagrant
+vagrant/vagrant_env
