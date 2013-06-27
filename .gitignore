@@ -4,6 +4,7 @@
 *.bak
 *.log
 *.pid
+*.swp
 settings.py
 *site_media*
 celery
