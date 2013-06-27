@@ -1,7 +1,7 @@
 django-eveauth
 ====================
 
-An EVE Online corp and access managment application based on pinax-project-account
+An EVE Online corp and access management application based on pinax-project-account
 
 Example usage
 =============
@@ -10,17 +10,16 @@ You will need to download http://dl.eve-files.com/media/corp/Entity/corplogos.7z
 have it uncompressed to use below
 
     $ git clone git@bitbucket.org:tsal/django-eveauth.git django-eveauth
-    $ virtualenv django-eveauth
     $ cd django-eveauth
-    $ source bin/activate
-    (django-eveauth)$ pip install -r requirements.txt
-    (django-eveauth)$ ln -s ./talkinlocal/settings-dist.py ./talkinlocal/settings.py
-    (django-eveauth)$ python manage.py syncdb
-    (django-eveauth)$ python manage.py migrate --all
-    (django-eveauth)$ cp -rp /path/to/corplogos talkinlocal/static/
-    (django-eveauth)$ python manage.py collectstatic
-    (django-eveauth)$ mkdir -p talkinlocal/site_media/media/logos/
-    (django-eveauth)$ python manage.py runserver
+    $ virtualenv eveauth_env
+    $ source eveauth_env/bin/activate
+    (eveauth_env)$ pip install -r requirements.txt
+    (eveauth_env)$ python manage.py syncdb
+    (eveauth_env)$ python manage.py migrate --all
+    (eveauth_env)$ ln -s /path/to/corplogos static/corplogos
+    (eveauth_env)$ python manage.py collectstatic
+    (eveauth_env)$ mkdir -p site_media/media/logos/
+    (eveauth_env)$ python manage.py runserver
 
 Hit http://127.0.0.1:8000 to view the site!
 
@@ -31,7 +30,6 @@ What's included
  * API Key Management
  * Basic Corp Management
  * EVE-aware(ish) Forums
-
 
 Common Issues
 ===============
@@ -48,4 +46,8 @@ Vagrant Development
 ===============
 
 A simple Vagrantfile and bootstrap.sh have been added to the repository to allow for
-quick provisioning of a development VM.
+quick provisioning of a development VM. After execution it should leave the vm such that
+you can simply run
+    $ vagrant ssh
+    $ cd /vagrant
+    $ python manage.py runserver 0.0.0.0:8000

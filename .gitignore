@@ -13,5 +13,10 @@ djextdirect
 .vagrant
 vagrant/vagrant_env
 *corplogos*
-
 settings.py
+database.py
+celery.py
+logging.py
+email.py
+apps.py
+eveauth_env/*
