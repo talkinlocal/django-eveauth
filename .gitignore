@@ -5,12 +5,13 @@
 *.log
 *.pid
 settings.py
-*/static/*
-static/*
-*/site_media/*
+*site_media*
 celery
 celerybeat-schedule
 djextdirect
 .idea
 .vagrant
 vagrant/vagrant_env
+*corplogos*
+
+settings.py
