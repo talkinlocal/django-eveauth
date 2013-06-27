@@ -13,7 +13,7 @@ include(
     optional('celery.py'),
     optional('logging.py'),
     optional('email.py'),
-    optional('apps-dist.py'),
+    optional('apps.py'),
 
 
     scope=locals()
