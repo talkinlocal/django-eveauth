@@ -17,7 +17,7 @@ class APIKey(models.Model):
                                  help_text="The number ID of your API key")
     vcode = models.CharField(max_length=255,
                              help_text="The verification code of your API key")
-    key_type = models.CharField(max_length=12, default='')
+    key_type = models.CharField(max_length=12, default='', editable=False)
     date_added = models.DateTimeField(default=timezone.now)
 
     def get_characters(self):
