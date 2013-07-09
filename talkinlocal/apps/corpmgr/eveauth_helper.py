@@ -104,7 +104,9 @@ class EveauthObjectHelper():
             corp_standings_entry = CorporationStandingsEntry.objects.get(contact_id=entry, corporation=corp)
             corp_standings_entry.delete()
 
+        logger.debug(type(allianceID))
         if allianceID:
+            logger.debug('made it')
             corp_alliance_list = contact_list.allianceContactList
             auth_alliance = self.get_alliance(allianceID)
             from models import AllianceStandingsEntry
@@ -120,10 +122,11 @@ class EveauthObjectHelper():
                     standings_entry.contact_type = contact_type
                     standings_entry.standing = Decimal(str(contact.standing))
                     standings_entry.save()
+                    
             ids_from_api = [contact.contactID for contact in corp_alliance_list]
             ids_from_db = set(AllianceStandingsEntry.objects.values_list('contact_id', flat=True))
 
-            obsolete_entries = ids_from_db.difference(ids_from_api)
+            #obsolete_entries = ids_from_db.difference(ids_from_api)
             logger.info('Removing %s obsolete entries from AllianceStandingsEntry' % len(obsolete_entries))
             for entry in obsolete_entries:
                 logger.debug('Removing contact id %s' % entry)
