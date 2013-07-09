@@ -1,6 +1,8 @@
 import logging
 from eveauth.models import Corporation, Alliance
 
+logger = logging.getLogger('corpmgr')
+
 
 class EveauthObjectHelper():
     def __init__(self, apikey):
@@ -40,8 +42,13 @@ class EveauthObjectHelper():
             return alliance
 
     def update_contacts_from_api(self, corporationID, allianceID):
-        import decimal
-        logger = logging.getLogger('eveauth')
+        """
+        Checks the EVE API for the standings list for corporation in
+        :param corporationID:
+        :param allianceID:
+        :return:
+        """
+        from decimal import Decimal
         logger.info('Updating contacts from API')
 
         def UpdateContact(auth, contactID):
@@ -55,6 +62,7 @@ class EveauthObjectHelper():
                     corp.save()
                     return StandingsConstants.Corporation
                 except:
+                    logger.logException('There was an exception attempting to find Corporation %s' % contactID)
                     pass
             try:
                 alliance = Alliance.objects.get(pk=contactID)
@@ -77,13 +85,13 @@ class EveauthObjectHelper():
         for contact in corp_list:
             try:
                 standings_entry = CorporationStandingsEntry.objects.get(corporation=corp, contact_id=contact.contactID)
-                standings_entry.standing = decimal.Decimal(str(contact.standing))
+                standings_entry.standing = Decimal(str(contact.standing))
                 standings_entry.save()
             except CorporationStandingsEntry.DoesNotExist:
                 contact_type = UpdateContact(self.connection, contact.contactID)
                 standings_entry = CorporationStandingsEntry(corporation=corp, contact_id=contact.contactID)
                 standings_entry.contact_type = contact_type
-                standings_entry.standing = decimal.Decimal(str(contact.standing))
+                standings_entry.standing = Decimal(str(contact.standing))
                 standings_entry.save()
 
         ids_from_api = [contact.contactID for contact in corp_list]
@@ -96,9 +104,7 @@ class EveauthObjectHelper():
             corp_standings_entry = CorporationStandingsEntry.objects.get(contact_id=entry, corporation=corp)
             corp_standings_entry.delete()
 
-        logger.debug(type(allianceID))
         if allianceID:
-            logger.debug('made it')
             corp_alliance_list = contact_list.allianceContactList
             auth_alliance = self.get_alliance(allianceID)
             from models import AllianceStandingsEntry
@@ -107,18 +113,17 @@ class EveauthObjectHelper():
                 try:
                     standings_entry = AllianceStandingsEntry.objects.get(alliance=auth_alliance,
                                                                          contact_id=contact.contactID)
-                    standings_entry.standing = decimal.Decimal(str(contact.standing))
+                    standings_entry.standing = Decimal(str(contact.standing))
                 except AllianceStandingsEntry.DoesNotExist:
                     contact_type = UpdateContact(self.connection, contact.contactID)
                     standings_entry = AllianceStandingsEntry(alliance=auth_alliance, contact_id=contact.contactID)
                     standings_entry.contact_type = contact_type
-                    standings_entry.standing = decimal.Decimal(str(contact.standing))
+                    standings_entry.standing = Decimal(str(contact.standing))
                     standings_entry.save()
-            logger.debug('made it again')
             ids_from_api = [contact.contactID for contact in corp_alliance_list]
             ids_from_db = set(AllianceStandingsEntry.objects.values_list('contact_id', flat=True))
 
-            #obsolete_entries = ids_from_db.difference(ids_from_api)
+            obsolete_entries = ids_from_db.difference(ids_from_api)
             logger.info('Removing %s obsolete entries from AllianceStandingsEntry' % len(obsolete_entries))
             for entry in obsolete_entries:
                 logger.debug('Removing contact id %s' % entry)
