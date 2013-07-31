@@ -37,7 +37,7 @@ LOGGING = {
             "level": "ERROR",
             "propagate": True,
         },
-        "eveauth": {
+        "eve_auth": {
             "handlers": ["console"],
             "level": "DEBUG",
             "propagate": True,

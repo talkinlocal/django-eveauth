@@ -8,7 +8,7 @@ CELERY_TASK_RESULT_EXPIRES = 120
 CELERY_ALWAYS_EAGER = False
 CELERY_TIMEZONE = 'UTC'
 CELERY_IMPORTS = (
-    "eveauth.tasks",
+    "eve_auth.tasks",
     "vreddit.tasks",
     "corpmgr.tasks",
 )
