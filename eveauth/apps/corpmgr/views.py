@@ -12,7 +12,7 @@ from datetime import datetime
 from django.views.generic.base import (RedirectView,
         View, TemplateResponseMixin)
 from django.views.generic.edit import FormView
-from eveauth.views import OwnerListView
+from eve_auth.views import OwnerListView
 
 from bootstrap.views import (
                             CreateView as BSCreateView,

@@ -58,7 +58,7 @@ class Migration(SchemaMigration):
         },
         'corpmgr.allianceprofile': {
             'Meta': {'object_name': 'AllianceProfile'},
-            'alliance': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'mgmt_profile'", 'unique': 'True', 'to': "orm['eveauth.Alliance']"}),
+            'alliance': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'mgmt_profile'", 'unique': 'True', 'to': "orm['eve_auth.Alliance']"}),
             'api_mask': ('django.db.models.fields.IntegerField', [], {'null': 'True'}),
             'created_on': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'director_group': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'executive_directors_of'", 'unique': 'True', 'to': "orm['auth.Group']"}),
@@ -70,7 +70,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'CorporationProfile'},
             'alliance_profile': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'member_corp_profiles'", 'unique': 'True', 'null': 'True', 'to': "orm['corpmgr.AllianceProfile']"}),
             'api_mask': ('django.db.models.fields.IntegerField', [], {}),
-            'corporation': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'mgmt_profile'", 'unique': 'True', 'to': "orm['eveauth.Corporation']"}),
+            'corporation': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'mgmt_profile'", 'unique': 'True', 'to': "orm['eve_auth.Corporation']"}),
             'created_on': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'director_group': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'directors_of'", 'unique': 'True', 'to': "orm['auth.Group']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -78,13 +78,13 @@ class Migration(SchemaMigration):
             'manager': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'corps_managed'", 'unique': 'True', 'to': "orm['auth.User']"}),
             'reddit_required': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
         },
-        'eveauth.alliance': {
+        'eve_auth.alliance': {
             'Meta': {'object_name': 'Alliance'},
             'alliance_id': ('django.db.models.fields.IntegerField', [], {'primary_key': 'True'}),
             'alliance_name': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'executor': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'executor_of'", 'to': "orm['eveauth.Corporation']"})
+            'executor': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'executor_of'", 'to': "orm['eve_auth.Corporation']"})
         },
-        'eveauth.corporation': {
+        'eve_auth.corporation': {
             'Meta': {'object_name': 'Corporation'},
             'corp_id': ('django.db.models.fields.IntegerField', [], {'unique': 'True', 'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '128'})

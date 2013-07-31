@@ -6,8 +6,8 @@ from django.contrib.contenttypes import generic
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from eveauth.models import Corporation, Character, Alliance, APIKey
-from eveauth_helper import EveauthObjectHelper, StandingsConstants
+from eve_auth.models import Corporation, Character, Alliance, APIKey
+from eve_auth_helper import EveauthObjectHelper, StandingsConstants
 
 import logging
 import managers

@@ -1,5 +1,5 @@
 import logging
-from eveauth.models import Corporation, Alliance
+from eve_auth.models import Corporation, Alliance
 
 logger = logging.getLogger('corpmgr')
 

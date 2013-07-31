@@ -5,7 +5,7 @@ import sys
 PACKAGE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 PROJECT_ROOT = os.path.abspath(os.path.dirname(PACKAGE_ROOT))
 
-# TODO: I would like to change this so that talkinlocal/apps is a package, but it requires touching
+# TODO: I would like to change this so that eveauth/apps is a package, but it requires touching
 # nearly every file, which I'm not quite ready to do at this time
 sys.path.insert(0, os.path.join(PACKAGE_ROOT, 'apps'))
 sys.path.insert(0, os.path.join(PACKAGE_ROOT, 'libs'))
@@ -110,10 +110,10 @@ MIDDLEWARE_CLASSES = [
     "onlineuser.middleware.OnlineUserMiddleware",
 ]
 
-ROOT_URLCONF = "talkinlocal.urls"
+ROOT_URLCONF = "eveauth.urls"
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = "talkinlocal.wsgi.application"
+WSGI_APPLICATION = "eveauth.wsgi.application"
 
 TEMPLATE_DIRS = [
     os.path.join(PACKAGE_ROOT, "templates"),
@@ -144,7 +144,7 @@ INSTALLED_APPS = [
     "celery",
 
     # project
-    "eveauth",
+    "eve_auth",
     "vreddit",
     "kombu.transport.django",
     "oauth_provider",

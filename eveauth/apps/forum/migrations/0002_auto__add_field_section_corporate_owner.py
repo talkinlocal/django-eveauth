@@ -59,7 +59,7 @@ class Migration(SchemaMigration):
         'corpmgr.corporationprofile': {
             'Meta': {'object_name': 'CorporationProfile'},
             'api_mask': ('django.db.models.fields.IntegerField', [], {}),
-            'corporation': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'mgmt_profile'", 'unique': 'True', 'to': "orm['eveauth.Corporation']"}),
+            'corporation': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'mgmt_profile'", 'unique': 'True', 'to': "orm['eve_auth.Corporation']"}),
             'created_on': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'director_group': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'directors_of'", 'unique': 'True', 'to': "orm['auth.Group']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -67,7 +67,7 @@ class Migration(SchemaMigration):
             'manager': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'corps_managed'", 'unique': 'True', 'to': "orm['auth.User']"}),
             'reddit_required': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
         },
-        'eveauth.corporation': {
+        'eve_auth.corporation': {
             'Meta': {'object_name': 'Corporation'},
             'corp_id': ('django.db.models.fields.IntegerField', [], {'unique': 'True', 'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '128'})

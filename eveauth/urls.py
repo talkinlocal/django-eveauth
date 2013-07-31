@@ -10,7 +10,7 @@ from account.views import SignupView
 
 urlpatterns = patterns("",
     url(r"^$", direct_to_template, {"template": "homepage.html"}, name="home"),
-    url(r"^auth/", include('eveauth.urls')),
+    url(r"^auth/", include('eve_auth.urls')),
     url(r"^admin/", include(admin.site.urls)),
     url(r'^reddit/', include("vreddit.urls")), 
     url(r"^account/signup/$", SignupView.as_view(), name="account_signup"),

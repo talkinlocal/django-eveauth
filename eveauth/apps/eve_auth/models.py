@@ -49,7 +49,7 @@ class APIKey(models.Model):
 
     # TODO: This needs refactored to remove this method and just use self.key_type directly in other code
     def get_key_type(self):
-        logger = logging.getLogger('eveauth')
+        logger = logging.getLogger('eve_auth')
         if not self.key_type or len(self.key_type) == 0:
             logger.debug('updating key type')
             logger.debug('key type %s' % self.key_type)
@@ -126,7 +126,7 @@ class Corporation(models.Model):
         self.save()
 
     def get_logo_url(self, thumb=True):
-        logger = logging.getLogger("eveauth")
+        logger = logging.getLogger("eve_auth")
         logger.debug("test message")
         filename = "%i.png" % self.corp_id
         if thumb:

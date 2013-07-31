@@ -1,6 +1,6 @@
 from celery import task
 from celery.exceptions import SoftTimeLimitExceeded
-from eveauth_helper import EveauthObjectHelper
+from eve_auth_helper import EveauthObjectHelper
 
 
 @task(ignore_result=True)
@@ -19,7 +19,7 @@ def update_standings(instance, corpID, allianceID):
 @task(ignore_result=True)
 def update_all_standings():
     print('updating all standings')
-    from eveauth.models import APIKey
+    from eve_auth.models import APIKey
 
     all_keys = APIKey.objects.all()
     for key in all_keys:

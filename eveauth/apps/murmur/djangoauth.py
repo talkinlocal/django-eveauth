@@ -83,8 +83,8 @@ cfgfile = 'djangoauth.ini'
 default = { 'user':(('id_offset', int, 1000000000),
                     ('reject_on_error', x2bool, True)),
 
-            'django':(('root_path', str, '/srv/talkinlocal.org/app'),
-                    ('settings_module', str, 'talkinlocal.settings')),
+            'django':(('root_path', str, '/srv/eve_auth.org/app'),
+                    ('settings_module', str, 'eve_auth.settings')),
                     
             'ice':(('host', str, '127.0.0.1'),
                    ('port', int, 6502),
@@ -218,7 +218,7 @@ def do_main_program():
     os.environ['DJANGO_SETTINGS_MODULE'] = cfg.django.settings_module
 
     from django.db import models
-    from eveauth.models import Account
+    from eve_auth.models import Account
     from django.contrib.auth.models import User
     from django.template.defaultfilters import slugify
     #

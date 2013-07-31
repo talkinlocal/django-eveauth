@@ -27,7 +27,7 @@ from account.utils import default_redirect, user_display
 
 from django.template import RequestContext
 
-from eveauth.tasks import update_characters
+from eve_auth.tasks import update_characters
 
 from models import APIKey, Character, DefaultCharacter
 
@@ -40,7 +40,7 @@ import os
 
 class CharacterUpdateView(TemplateResponseMixin, View):
     model = Character
-    template_name = "eveauth/character_list.html"
+    template_name = "eve_auth/character_list.html"
 
     def get(self, request):
         user = self.request.user
@@ -122,7 +122,7 @@ class APIKeyListView(OwnerListView):
 
 class CharacterListView(OwnerListView):
     model = Character
-    template_name = "eveauth/character_list.html"
+    template_name = "eve_auth/character_list.html"
 
     def _get_create_url(self):
         return ''
@@ -130,7 +130,7 @@ class CharacterListView(OwnerListView):
 
 class APIKeyDeleteView(BSDeleteView):
     model = APIKey
-    template_name = "eveauth/apikey_delete.html"
+    template_name = "eve_auth/apikey_delete.html"
 
     def get_success_url(self):
         return reverse('apikey_list')
@@ -139,7 +139,7 @@ class APIKeyDeleteView(BSDeleteView):
 class APIKeyCreateView(BSCreateView):
     model = APIKey
     form_class = APIKeyForm
-    template_name = "eveauth/apikey_add.html"
+    template_name = "eve_auth/apikey_add.html"
 
     def form_valid(self, form):
         u = self.request.user
@@ -207,7 +207,7 @@ Please assure you meet these requirements.
 class APIKeyUpdateView(BSUpdateView):
     model = APIKey
     form_class = APIKeyForm
-    template_name = "eveauth/apikey_update.html"
+    template_name = "eve_auth/apikey_update.html"
 
     def form_valid(self, form):
         u = self.request.user
@@ -229,7 +229,7 @@ class APIKeyUpdateView(BSUpdateView):
 class DefaultCharacterView(FormView):
     form_class = DefaultCharacterForm
     model = DefaultCharacter
-    template_name = "eveauth/default_character.html"
+    template_name = "eve_auth/default_character.html"
 
     def form_valid(self, form):
         u = self.request.user

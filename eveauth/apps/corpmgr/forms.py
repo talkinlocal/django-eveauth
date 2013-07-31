@@ -1,6 +1,6 @@
 from django import forms
 from models import CorporationApplication, CorporationProfile
-from eveauth.models import Corporation, Character
+from eve_auth.models import Corporation, Character
 
 class CorpApplicationForm(forms.ModelForm):
 

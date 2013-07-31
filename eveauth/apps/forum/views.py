@@ -373,7 +373,7 @@ def forum_detail(request, forum_id):
     # Get a page of topics
     topics_per_page = get_topics_per_page(request.user)
 
-    if 'eveauth' in settings.INSTALLED_APPS:
+    if 'eve_auth' in settings.INSTALLED_APPS:
         paginator = Paginator(
                 Topic.objects.with_character_details().filter(**topic_filters),
                 topics_per_page)
@@ -402,7 +402,7 @@ def forum_detail(request, forum_id):
     # current user's last read details to all topics.
     if page.number == 1:
         topic_filters['pinned'] = True
-        if 'eveauth' in settings.INSTALLED_APPS:
+        if 'eve_auth' in settings.INSTALLED_APPS:
             pinned_topics = list(Topic.objects.with_character_details() \
                                             .filter(**topic_filters) \
                                             .order_by('-started_at'))
@@ -548,7 +548,7 @@ def topic_detail(request, topic_id, meta=False):
         if not topic.forum.section.is_corp_authed(request.user):
             raise Http404
 
-    if 'eveauth' in settings.INSTALLED_APPS:
+    if 'eve_auth' in settings.INSTALLED_APPS:
         postqs = Post.objects.with_character_details().filter(topic=topic, meta=meta).order_by('posted_at', 'num_in_topic')
 
         return object_list(request,

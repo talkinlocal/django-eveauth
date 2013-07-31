@@ -8,15 +8,81 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'Alliance.alliance_name'
-        db.add_column('eveauth_alliance', 'alliance_name',
-                      self.gf('django.db.models.fields.CharField')(default='Dummy', max_length=128),
-                      keep_default=False)
+        # Adding model 'APIKey'
+        db.create_table('eve_auth_apikey', (
+            ('account', self.gf('django.db.models.fields.related.ForeignKey')(related_name='apikeys', to=orm['account.Account'])),
+            ('api_id', self.gf('django.db.models.fields.IntegerField')(unique=True, primary_key=True)),
+            ('vcode', self.gf('django.db.models.fields.CharField')(max_length=255)),
+            ('date_added', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
+        ))
+        db.send_create_signal('eve_auth', ['APIKey'])
+
+        # Adding model 'Corporation'
+        db.create_table('eve_auth_corporation', (
+            ('corp_id', self.gf('django.db.models.fields.IntegerField')(unique=True, primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=128)),
+        ))
+        db.send_create_signal('eve_auth', ['Corporation'])
+
+        # Adding model 'Character'
+        db.create_table('eve_auth_character', (
+            ('account', self.gf('django.db.models.fields.related.ForeignKey')(related_name='all_characters', to=orm['account.Account'])),
+            ('api_key', self.gf('django.db.models.fields.related.ForeignKey')(related_name='characters', to=orm['eve_auth.APIKey'])),
+            ('character_id', self.gf('django.db.models.fields.IntegerField')(unique=True, primary_key=True)),
+            ('corp', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['eve_auth.Corporation'])),
+            ('character_name', self.gf('django.db.models.fields.CharField')(max_length=128)),
+        ))
+        db.send_create_signal('eve_auth', ['Character'])
+
+        # Adding model 'CharacterSheet'
+        db.create_table('eve_auth_charactersheet', (
+            ('character', self.gf('django.db.models.fields.related.OneToOneField')(related_name='sheet', unique=True, primary_key=True, to=orm['eve_auth.Character'])),
+            ('corp', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['eve_auth.Corporation'])),
+            ('alliance_id', self.gf('django.db.models.fields.IntegerField')(null=True)),
+            ('sec_status', self.gf('django.db.models.fields.IntegerField')()),
+            ('last_retrieved', self.gf('django.db.models.fields.DateTimeField')(null=True)),
+        ))
+        db.send_create_signal('eve_auth', ['CharacterSheet'])
+
+        # Adding model 'DefaultCharacter'
+        db.create_table('eve_auth_defaultcharacter', (
+            ('account', self.gf('django.db.models.fields.related.OneToOneField')(related_name='default_character', unique=True, to=orm['account.Account'])),
+            ('character', self.gf('django.db.models.fields.related.OneToOneField')(related_name='default_for', unique=True, primary_key=True, to=orm['eve_auth.Character'])),
+        ))
+        db.send_create_signal('eve_auth', ['DefaultCharacter'])
+
+        # Adding unique constraint on 'DefaultCharacter', fields ['account', 'character']
+        db.create_unique('eve_auth_defaultcharacter', ['account_id', 'character_id'])
+
+        # Adding model 'Alliance'
+        db.create_table('eve_auth_alliance', (
+            ('alliance_id', self.gf('django.db.models.fields.IntegerField')(primary_key=True)),
+            ('executor', self.gf('django.db.models.fields.related.ForeignKey')(related_name='executor_of', to=orm['eve_auth.Corporation'])),
+        ))
+        db.send_create_signal('eve_auth', ['Alliance'])
 
 
     def backwards(self, orm):
-        # Deleting field 'Alliance.alliance_name'
-        db.delete_column('eveauth_alliance', 'alliance_name')
+        # Removing unique constraint on 'DefaultCharacter', fields ['account', 'character']
+        db.delete_unique('eve_auth_defaultcharacter', ['account_id', 'character_id'])
+
+        # Deleting model 'APIKey'
+        db.delete_table('eve_auth_apikey')
+
+        # Deleting model 'Corporation'
+        db.delete_table('eve_auth_corporation')
+
+        # Deleting model 'Character'
+        db.delete_table('eve_auth_character')
+
+        # Deleting model 'CharacterSheet'
+        db.delete_table('eve_auth_charactersheet')
+
+        # Deleting model 'DefaultCharacter'
+        db.delete_table('eve_auth_defaultcharacter')
+
+        # Deleting model 'Alliance'
+        db.delete_table('eve_auth_alliance')
 
 
     models = {
@@ -63,45 +129,44 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        'eveauth.alliance': {
+        'eve_auth.alliance': {
             'Meta': {'object_name': 'Alliance'},
             'alliance_id': ('django.db.models.fields.IntegerField', [], {'primary_key': 'True'}),
-            'alliance_name': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'executor': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'executor_of'", 'to': "orm['eveauth.Corporation']"})
+            'executor': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'executor_of'", 'to': "orm['eve_auth.Corporation']"})
         },
-        'eveauth.apikey': {
+        'eve_auth.apikey': {
             'Meta': {'object_name': 'APIKey'},
             'account': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'apikeys'", 'to': "orm['account.Account']"}),
             'api_id': ('django.db.models.fields.IntegerField', [], {'unique': 'True', 'primary_key': 'True'}),
             'date_added': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'vcode': ('django.db.models.fields.CharField', [], {'max_length': '255'})
         },
-        'eveauth.character': {
+        'eve_auth.character': {
             'Meta': {'object_name': 'Character'},
             'account': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'all_characters'", 'to': "orm['account.Account']"}),
-            'api_key': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'characters'", 'to': "orm['eveauth.APIKey']"}),
+            'api_key': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'characters'", 'to': "orm['eve_auth.APIKey']"}),
             'character_id': ('django.db.models.fields.IntegerField', [], {'unique': 'True', 'primary_key': 'True'}),
             'character_name': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'corp': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['eveauth.Corporation']"})
+            'corp': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['eve_auth.Corporation']"})
         },
-        'eveauth.charactersheet': {
+        'eve_auth.charactersheet': {
             'Meta': {'object_name': 'CharacterSheet'},
             'alliance_id': ('django.db.models.fields.IntegerField', [], {'null': 'True'}),
-            'character': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'sheet'", 'unique': 'True', 'primary_key': 'True', 'to': "orm['eveauth.Character']"}),
-            'corp': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['eveauth.Corporation']"}),
+            'character': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'sheet'", 'unique': 'True', 'primary_key': 'True', 'to': "orm['eve_auth.Character']"}),
+            'corp': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['eve_auth.Corporation']"}),
             'last_retrieved': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'sec_status': ('django.db.models.fields.IntegerField', [], {})
         },
-        'eveauth.corporation': {
+        'eve_auth.corporation': {
             'Meta': {'object_name': 'Corporation'},
             'corp_id': ('django.db.models.fields.IntegerField', [], {'unique': 'True', 'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '128'})
         },
-        'eveauth.defaultcharacter': {
+        'eve_auth.defaultcharacter': {
             'Meta': {'unique_together': "(('account', 'character'),)", 'object_name': 'DefaultCharacter'},
             'account': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'default_character'", 'unique': 'True', 'to': "orm['account.Account']"}),
-            'character': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'default_for'", 'unique': 'True', 'primary_key': 'True', 'to': "orm['eveauth.Character']"})
+            'character': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'default_for'", 'unique': 'True', 'primary_key': 'True', 'to': "orm['eve_auth.Character']"})
         }
     }
 
-    complete_apps = ['eveauth']
+    complete_apps = ['eve_auth']

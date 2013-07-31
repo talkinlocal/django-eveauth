@@ -11,7 +11,7 @@ class Migration(SchemaMigration):
         # Adding model 'CorporationProfile'
         db.create_table('corpmgr_corporationprofile', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('corporation', self.gf('django.db.models.fields.related.OneToOneField')(related_name='mgmt_profile', unique=True, to=orm['eveauth.Corporation'])),
+            ('corporation', self.gf('django.db.models.fields.related.OneToOneField')(related_name='mgmt_profile', unique=True, to=orm['eve_auth.Corporation'])),
             ('manager', self.gf('django.db.models.fields.related.ForeignKey')(related_name='corps_managed', unique=True, to=orm['auth.User'])),
             ('director_group', self.gf('django.db.models.fields.related.OneToOneField')(related_name='directors_of', unique=True, to=orm['auth.Group'])),
             ('api_mask', self.gf('django.db.models.fields.IntegerField')()),
@@ -37,8 +37,8 @@ class Migration(SchemaMigration):
             ('status', self.gf('django.db.models.fields.IntegerField')(default=0)),
             ('created_on', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('last_modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('character', self.gf('django.db.models.fields.related.OneToOneField')(related_name='corp_app', unique=True, to=orm['eveauth.Character'])),
-            ('corporation', self.gf('django.db.models.fields.related.ForeignKey')(related_name='member_applications', to=orm['eveauth.Corporation'])),
+            ('character', self.gf('django.db.models.fields.related.OneToOneField')(related_name='corp_app', unique=True, to=orm['eve_auth.Character'])),
+            ('corporation', self.gf('django.db.models.fields.related.ForeignKey')(related_name='member_applications', to=orm['eve_auth.Corporation'])),
             ('created_by', self.gf('django.db.models.fields.related.ForeignKey')(related_name='corporation_applications', to=orm['account.Account'])),
             ('reviewed_by', self.gf('django.db.models.fields.related.ForeignKey')(default=None, related_name='mbr_applications_reviewed', null=True, to=orm['account.Account'])),
             ('approved_by', self.gf('django.db.models.fields.related.ForeignKey')(default=None, related_name='mbr_applications_approved', null=True, to=orm['account.Account'])),
@@ -55,7 +55,7 @@ class Migration(SchemaMigration):
             ('status', self.gf('django.db.models.fields.IntegerField')(default=0)),
             ('created_on', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('last_modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('corporation', self.gf('django.db.models.fields.related.OneToOneField')(related_name='alliance_application', unique=True, to=orm['eveauth.Corporation'])),
+            ('corporation', self.gf('django.db.models.fields.related.OneToOneField')(related_name='alliance_application', unique=True, to=orm['eve_auth.Corporation'])),
             ('created_by', self.gf('django.db.models.fields.related.ForeignKey')(related_name='alliance_applications', to=orm['account.Account'])),
             ('reviewed_by', self.gf('django.db.models.fields.related.ForeignKey')(default=None, related_name='crp_applications_reviewed', null=True, to=orm['account.Account'])),
             ('approved_by', self.gf('django.db.models.fields.related.ForeignKey')(default=None, related_name='crp_applications_approved', null=True, to=orm['account.Account'])),
@@ -128,7 +128,7 @@ class Migration(SchemaMigration):
         'corpmgr.allianceapplication': {
             'Meta': {'object_name': 'AllianceApplication'},
             'approved_by': ('django.db.models.fields.related.ForeignKey', [], {'default': 'None', 'related_name': "'crp_applications_approved'", 'null': 'True', 'to': "orm['account.Account']"}),
-            'corporation': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'alliance_application'", 'unique': 'True', 'to': "orm['eveauth.Corporation']"}),
+            'corporation': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'alliance_application'", 'unique': 'True', 'to': "orm['eve_auth.Corporation']"}),
             'created_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'alliance_applications'", 'to': "orm['account.Account']"}),
             'created_on': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -140,8 +140,8 @@ class Migration(SchemaMigration):
         'corpmgr.corporationapplication': {
             'Meta': {'unique_together': "(('character', 'corporation'),)", 'object_name': 'CorporationApplication'},
             'approved_by': ('django.db.models.fields.related.ForeignKey', [], {'default': 'None', 'related_name': "'mbr_applications_approved'", 'null': 'True', 'to': "orm['account.Account']"}),
-            'character': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'corp_app'", 'unique': 'True', 'to': "orm['eveauth.Character']"}),
-            'corporation': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'member_applications'", 'to': "orm['eveauth.Corporation']"}),
+            'character': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'corp_app'", 'unique': 'True', 'to': "orm['eve_auth.Character']"}),
+            'corporation': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'member_applications'", 'to': "orm['eve_auth.Corporation']"}),
             'created_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'corporation_applications'", 'to': "orm['account.Account']"}),
             'created_on': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -153,7 +153,7 @@ class Migration(SchemaMigration):
         'corpmgr.corporationprofile': {
             'Meta': {'object_name': 'CorporationProfile'},
             'api_mask': ('django.db.models.fields.IntegerField', [], {}),
-            'corporation': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'mgmt_profile'", 'unique': 'True', 'to': "orm['eveauth.Corporation']"}),
+            'corporation': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'mgmt_profile'", 'unique': 'True', 'to': "orm['eve_auth.Corporation']"}),
             'created_on': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'director_group': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'directors_of'", 'unique': 'True', 'to': "orm['auth.Group']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -169,22 +169,22 @@ class Migration(SchemaMigration):
             'created_on': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
         },
-        'eveauth.apikey': {
+        'eve_auth.apikey': {
             'Meta': {'object_name': 'APIKey'},
             'account': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'apikeys'", 'to': "orm['account.Account']"}),
             'api_id': ('django.db.models.fields.IntegerField', [], {'unique': 'True', 'primary_key': 'True'}),
             'date_added': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'vcode': ('django.db.models.fields.CharField', [], {'max_length': '255'})
         },
-        'eveauth.character': {
+        'eve_auth.character': {
             'Meta': {'object_name': 'Character'},
             'account': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'all_characters'", 'to': "orm['account.Account']"}),
-            'api_key': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'characters'", 'to': "orm['eveauth.APIKey']"}),
+            'api_key': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'characters'", 'to': "orm['eve_auth.APIKey']"}),
             'character_id': ('django.db.models.fields.IntegerField', [], {'unique': 'True', 'primary_key': 'True'}),
             'character_name': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'corp': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['eveauth.Corporation']"})
+            'corp': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['eve_auth.Corporation']"})
         },
-        'eveauth.corporation': {
+        'eve_auth.corporation': {
             'Meta': {'object_name': 'Corporation'},
             'corp_id': ('django.db.models.fields.IntegerField', [], {'unique': 'True', 'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '128'})

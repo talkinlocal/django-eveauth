@@ -18,7 +18,7 @@ from pytz import common_timezones
 
 from corpmgr.models import CorporationProfile, AllianceProfile
 
-from eveauth.models import Character, DefaultCharacter
+from eve_auth.models import Character, DefaultCharacter
 
 from django.conf import settings
 
@@ -377,7 +377,7 @@ class Forum(models.Model):
             self.last_topic_id = post.topic.pk
             self.last_topic_title = post.topic.title
             self.last_user_id = post.user.pk
-            if 'eveauth' in settings.INSTALLED_APPS:
+            if 'eve_auth' in settings.INSTALLED_APPS:
                 try:
                     self.last_username = post.user.get_profile().default_character.character.character_name
                 except DefaultCharacter.DoesNotExist:
@@ -420,7 +420,7 @@ class TopicManager(models.Manager):
         return queryset
 
     def _character_details(self, queryset):
-        from eveauth.models import DefaultCharacter, Character
+        from eve_auth.models import DefaultCharacter, Character
         from account.models import Account
         opts = self.model._meta
         char_opts = Character._meta
@@ -712,7 +712,7 @@ class Topic(models.Model):
         self.post_count = self.posts.filter(meta=False).count()
         self.last_post_at = post.posted_at
         self.last_user_id = post.user.pk
-        if 'eveauth' in settings.INSTALLED_APPS:
+        if 'eve_auth' in settings.INSTALLED_APPS:
             try:
                 self.last_username = post.user.get_profile().default_character.character.character_name
             except:
@@ -763,7 +763,7 @@ class PostManager(models.Manager):
             ]
         )
     def with_character_details(self):
-        from eveauth.models import DefaultCharacter, Character
+        from eve_auth.models import DefaultCharacter, Character
         from account.models import Account
 
         opts = self.model._meta

@@ -17,7 +17,7 @@ from account.utils import default_redirect, user_display
 
 from django.template import RequestContext
 
-from eveauth.tasks import update_characters
+from eve_auth.tasks import update_characters
 
 from models import RedditAccount, RedditConfirmation
 from forms import RedditAccountForm
@@ -120,7 +120,7 @@ def generate_state_key(pre_code, secret, username):
 
 def get_reddit_client(redirect_uri):
     r  = praw.Reddit(
-            'Talk In Local - talkinlocal.org reddit verification v1.0'
+            'Talk In Local - eve_auth.org reddit verification v1.0'
             )
 
     r.set_oauth_app_info(
