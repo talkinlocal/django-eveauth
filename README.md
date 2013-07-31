@@ -17,7 +17,7 @@ have it uncompressed to use below
     (eveauth_env)$ python manage.py syncdb
     (eveauth_env)$ python manage.py migrate --all
     (eveauth_env)$ ln -s /path/to/corplogos static/corplogos
-    (eveauth_env)$ python manage.py collectstatic
+    (eveauth_env)$ python manage.py collectstatic --link
     (eveauth_env)$ mkdir -p site_media/media/logos/
     (eveauth_env)$ python manage.py runserver
 
