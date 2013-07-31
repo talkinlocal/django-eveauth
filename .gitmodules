@@ -1,3 +1,0 @@
-[submodule "talkinlocal/apps/djangokb"]
-	path = talkinlocal/apps/djangokb
-	url = https://bitbucket.org/tsal/djangokb.git
